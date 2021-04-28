@@ -21,6 +21,8 @@ outputs:
 runs:
   using: composite
   steps:
+    - run: test -n "${{ inputs.aws-access-key-id }}" -a -n "${{ inputs.aws-secret-access-key }}"
+      shell: bash
     - run: echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
       id: docker
       shell: bash
