@@ -1,0 +1,19 @@
+name: Notify Slack
+description: Notify Slack about the success/failure of a deploy
+inputs:
+  webhook-url:
+    description: Slack URL to post to
+    required: true
+  job-status:
+    description: "Whether the deploy succeeded or failed (default: success)"
+    required: true
+    default: success
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: python ${{ github.action_path }}/notify.py
+      env:
+        SLACK_WEBHOOK: ${{ inputs.webhook-url }}
+        JOB_STATUS: ${{ inputs.job-status }}
+        GITHUB_ENVIRONMENT: ${{ toJSON(github) }}
