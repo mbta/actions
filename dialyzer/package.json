@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "build": "prettier --write src/ && ncc build src/main.ts -o dist/main"
+  },
+  "dependencies": {
+    "@actions/cache": "^1.0.7",
+    "@actions/core": "^1.2.7",
+    "@actions/exec": "^1.0.4",
+    "@actions/glob": "^0.1.1"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.28.4",
+    "prettier": "2.2.1",
+    "typescript": "^4.2.4"
+  }
+}
