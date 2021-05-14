@@ -34,15 +34,18 @@ function check_deployment_complete() {
   [ "${pending_count}" -eq "0" ] && [ "${running_count}" -eq "${desired_count}" ]
 }
 
+# set default region so we don't have to specify --region everywhere
+export AWS_DEFAULT_REGION="${AWS_REGION}"
+
 # attempt to get the contents of the template task definition from ECS (for Terraform-built ECS services)
 echo "Retrieving ${ECS_SERVICE}-template task definition..."
-taskdefinition="$(aws ecs describe-task-definition --region "${AWS_REGION}" --task-definition "${ECS_SERVICE}-template")" \
+taskdefinition="$(aws ecs describe-task-definition --task-definition "${ECS_SERVICE}-template")" \
   || echo "No template task definition was found."
 
 # if no template exists, attempt to get task definition currently running on AWS (for legacy ECS services)
 if [ -z "${taskdefinition}" ]; then
   echo "Retreiving current ${ECS_SERVICE} task definition..."
-  taskdefinition=$(aws ecs describe-task-definition --region "${AWS_REGION}" --task-definition "${ECS_SERVICE}")
+  taskdefinition=$(aws ecs describe-task-definition --task-definition "${ECS_SERVICE}")
 fi
 
 # use retrieved task definition as basis for new revision, but replace image
