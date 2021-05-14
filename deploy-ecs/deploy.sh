@@ -1,6 +1,19 @@
 #!/bin/bash
 set -e -u
 
+# uncomment to debug
+# set -x
+
+# Update an ECS service and monitor its deployment status.
+# h/t to this blog post for inspriration:
+# https://medium.com/@aaron.kaz.music/monitoring-the-health-of-ecs-service-deployments-baeea41ae737
+
+# required environment variables:
+# - AWS_REGION
+# - ECS_CLUSTER
+# - ECS_SERVICE
+# - DOCKER_TAG
+
 function check_deployment_complete() {
   # extract task counts and test whether they match the desired state
 
