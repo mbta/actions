@@ -1,6 +1,26 @@
 #!/bin/bash
 set -e -u
 
+function check_deployment_complete() {
+  # extract task counts and test whether they match the desired state
+
+  local deployment_details
+  local desired_count
+  local pending_count
+  local running_count
+  deployment_details="${1}"
+
+  # get and print current task counts
+  desired_count="$(echo "${deployment_details}" | jq -r '.desiredCount')"
+  pending_count="$(echo "${deployment_details}" | jq -r '.pendingCount')"
+  running_count="$(echo "${deployment_details}" | jq -r '.runningCount')"
+  echo "Desired count: ${desired_count}"
+  echo "Pending count: ${pending_count}"
+  echo "Running count: ${running_count}"
+  # if the number of running tasks equals the number of desired tasks, then we're all set
+  [ "${pending_count}" -eq "0" ] && [ "${running_count}" -eq "${desired_count}" ]
+}
+
 # attempt to get the contents of the template task definition from ECS (for Terraform-built ECS services)
 echo "Retrieving ${ECS_SERVICE}-template task definition..."
 taskdefinition="$(aws ecs describe-task-definition --region "${AWS_REGION}" --task-definition "${ECS_SERVICE}-template")" \
@@ -40,38 +60,64 @@ aws ecs register-task-definition \
 newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_SERVICE}" | \
   jq -r '.taskDefinition.revision')"
 
-function task_count_eq {
-    local tasks
-    task_count=$(aws ecs list-tasks --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE| jq '.taskArns | length')
-    [[ $task_count = "$1" ]]
-}
+# redeploy the cluster
+echo "Updating service ${ECS_SERVICE} to use task definition ${newrevision}..."
+aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_SERVICE}:${newrevision}"
 
-function exit_if_too_many_checks {
-  if [[ $checks -ge 60 ]]; then
-    exit 1
+# monitor the cluster for status
+deployment_finished=false
+while [ "${deployment_finished}" = "false" ]; do
+  # get the service details
+  service_status="$(aws ecs describe-services --cluster="${ECS_CLUSTER}" --services="${ECS_SERVICE}")"
+  # exctract the details for the new deployment (status PRIMARY)
+  new_deployment="$(echo "${service_status}" | jq -r '.services[0].deployments[] | select(.status == "PRIMARY")')"
+
+  # check whether the new deployment is complete
+  if check_deployment_complete "${new_deployment}"; then
+    echo "Deployment complete."
+    deployment_finished=true
+  else
+    # extract deployment id
+    new_deployment_id="$(echo "${new_deployment}" | jq -r '.id')"
+    # find any tasks that may have stopped unexpectedly
+    stopped_tasks="$(aws ecs list-tasks --cluster "${ECS_CLUSTER}" --started-by "${new_deployment_id}" --desired-status "STOPPED" | jq -r '.taskArns')"
+    stopped_task_count="$(echo "${stopped_tasks}" | jq -r 'length')"
+    if [ "${stopped_task_count}" -gt "0" ]; then
+      # if there are stopped tasks, print the reason they stopped and then exit
+      stopped_task_list="$(echo "${stopped_tasks}" | jq -r 'join(",")')"
+      stopped_reasons="$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks "${stopped_task_list}" | jq -r '.tasks[].stoppedReason')"
+      echo "The deployment failed because one or more containers stopped running. The reasons given were:"
+      echo "${stopped_reasons}"
+      exit 1
+    fi
+    # wait, then loop
+    echo "Waiting for new tasks to start..."
+    sleep 5
   fi
-  sleep 5
-  checks=$((checks+1))
-}
-
-expected_count=$(aws ecs list-tasks --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE| jq '.taskArns | length')
-
-aws ecs update-service --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $ECS_SERVICE:$newrevision
-if  [[ $expected_count = "0" ]]; then
-    echo Environment $ECS_CLUSTER:$ECS_SERVICE is not running!
-    echo
-    echo We updated the definition: you can manually set the desired instances to 1.
-    exit 1
-fi
-
-checks=0
-while task_count_eq $expected_count; do
-    echo not yet started...
-    exit_if_too_many_checks
 done
 
-checks=0
-until task_count_eq $expected_count; do
-    echo old task not stopped...
-    exit_if_too_many_checks
+# confirm that the old deployment is torn down
+teardown_finished=false
+while [ "${teardown_finished}" = "false" ]; do
+  # get the service details
+  service_status="$(aws ecs describe-services --cluster="${ECS_CLUSTER}" --services="${ECS_SERVICE}")"
+  # extract the details for any old deployments (status ACTIVE)
+  deployment="$(echo "${service_status}" | jq -r --compact-output '.services[0].deployments[] | select(.status == "ACTIVE")')"
+  total_tasks=0
+
+  # extract deployment id
+  old_deployment_id="$(echo "${deployment}" | jq -r '.id')"
+  # count tasks associated with the old deployment that are still running
+  running_task_count="$(aws ecs list-tasks --cluster "${ECS_CLUSTER}" --started-by "${old_deployment_id}" --desired-status "RUNNING" | jq -r '.taskArns | length')"
+  total_tasks=$((total_tasks+running_task_count))
+
+  echo "Old tasks still running: ${total_tasks}"
+  # if no running tasks, break
+  if [ "$total_tasks" -eq "0" ]; then
+    echo "Done."
+    break
+  else
+    echo "Waiting for old tasks to be stopped..."
+    sleep 5
+  fi
 done
