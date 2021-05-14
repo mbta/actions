@@ -123,6 +123,11 @@ while [ "${teardown_finished}" = "false" ]; do
 
   # extract deployment id
   old_deployment_id="$(echo "${deployment}" | jq -r '.id')"
+  # if the previous deployment is already inactive, exit now
+  if [ -z "${old_deployment_id}" ]; then
+    echo "No active previous deployments found."
+    break
+  fi
   # count tasks associated with the old deployment that are still running
   running_task_count="$(aws ecs list-tasks --cluster "${ECS_CLUSTER}" --started-by "${old_deployment_id}" --desired-status "RUNNING" | jq -r '.taskArns | length')"
   total_tasks=$((total_tasks+running_task_count))
@@ -130,10 +135,11 @@ while [ "${teardown_finished}" = "false" ]; do
   echo "Old tasks still running: ${total_tasks}"
   # if no running tasks, break
   if [ "$total_tasks" -eq "0" ]; then
-    echo "Done."
     break
   else
     echo "Waiting for old tasks to be stopped..."
     sleep 5
   fi
 done
+
+echo "Done."
