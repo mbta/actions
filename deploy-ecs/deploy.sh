@@ -69,7 +69,7 @@ aws ecs register-task-definition \
   --container-definitions "${newcontainers}" \
   --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
   --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" \
-  --requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities[]')" \
+  --requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities')" \
   --cpu "$(echo "${taskdefinition}" | jq -r '.taskDefinition.cpu')" \
   --memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')"
 
