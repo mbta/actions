@@ -112,4 +112,7 @@ async function run(): Promise<void> {
   await mixDialyzer(core.getInput("cmd-line").split(" "));
 }
 
-run();
+run().catch((e) => {
+  console.error("Dialyzer failed", e);
+  process.exit(1);
+});
