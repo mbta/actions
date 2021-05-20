@@ -59778,7 +59778,10 @@ function run() {
         yield mixDialyzer(_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput("cmd-line").split(" "));
     });
 }
-run();
+run().catch((e) => {
+    console.error("Dialyzer failed", e);
+    process.exit(1);
+});
 
 })();
 
