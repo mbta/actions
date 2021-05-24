@@ -1,0 +1,43 @@
+name: ElasticBeanstalk ECR Dockerrun.aws.json
+description: Build an ElasticBeanstalk Dockerrun.aws.json based on an AWS ECR tag
+inputs:
+  docker-tag:
+    required: true
+    description: Docker tag to use in the deployment
+  port:
+    description: The port to publish (should be exposed by the Dockerfile)
+    default: 4000
+outputs:
+  deployment-package:
+    description: Path to the deployment .zip file
+    value: ${{ steps.build.outputs.package }}
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      id: build
+      run: |
+        echo ::set-output name=package::$(mktemp -d $RUNNER_TEMP/package-XXXXXX)/${{ github.sha }}.zip
+        echo ::set-output name=dir::$(mktemp -d $RUNNER_TEMP/deploy-XXXXXX)
+    - shell: bash
+      run: |
+        test -d rel/.ebextensions && cp -r rel/.ebextensions ${{ steps.build.outputs.dir }}
+        pushd ${{ steps.build.outputs.dir }} > /dev/null
+        cat <<EOF > Dockerrun.aws.json
+        {
+          "AWSEBDockerrunVersion": "1",
+          "Image": {
+            "Name": "${{ inputs.docker-tag }}",
+            "Update": "true"
+          },
+          "Ports": [
+            {
+              "ContainerPort": "${{ inputs.port }}"
+            }
+          ]
+        }
+        EOF
+        zip -r ${{ steps.build.outputs.package }} .
+        popd > /dev/null
+        rm -rf ${{ steps.build.outputs.dir }}
+        echo Created build package: ${{ steps.build.outputs.package }}

@@ -1,0 +1,24 @@
+name: Commit metadata
+description: Fetch Git metadata for the current SHA
+outputs:
+  sha-short:
+    description: Short Git SHA
+    value: ${{ steps.git.outputs.sha-short }}
+  commit-message:
+    description: Current commit message
+    value: ${{ steps.git.outputs.commit-message }}
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      id: git
+      run: |
+        echo ::set-output name=sha-short::$(git rev-parse --short ${{ github.sha }})
+        echo ::set-output name=commit-message::$(git log --format=%B -n 1 ${{ github.sha }} | head -n 1)
+    - shell: bash
+      run: |
+        cat <<EOF
+        Set outputs:
+        - sha-short => ${{ steps.git.outputs.sha-short }}
+        - commit-message => ${{ steps.git.outputs.commit-message }}
+        EOF
