@@ -5,7 +5,7 @@ set -e -u
 # set -x
 
 # Update an ECS service and monitor its deployment status.
-# h/t to this blog post for inspriration:
+# h/t to this blog post for inspiration:
 # https://medium.com/@aaron.kaz.music/monitoring-the-health-of-ecs-service-deployments-baeea41ae737
 
 # required environment variables:
@@ -44,7 +44,7 @@ taskdefinition="$(aws ecs describe-task-definition --task-definition "${ECS_SERV
 
 # if no template exists, attempt to get task definition currently running on AWS (for legacy ECS services)
 if [ -z "${taskdefinition}" ]; then
-  echo "Retreiving current ${ECS_SERVICE} task definition..."
+  echo "Retrieving current ${ECS_SERVICE} task definition..."
   taskdefinition=$(aws ecs describe-task-definition --task-definition "${ECS_SERVICE}")
 fi
 
@@ -85,7 +85,7 @@ deployment_finished=false
 while [ "${deployment_finished}" = "false" ]; do
   # get the service details
   service_status="$(aws ecs describe-services --cluster="${ECS_CLUSTER}" --services="${ECS_SERVICE}")"
-  # exctract the details for the new deployment (status PRIMARY)
+  # extract the details for the new deployment (status PRIMARY)
   new_deployment="$(echo "${service_status}" | jq -r '.services[0].deployments[] | select(.status == "PRIMARY")')"
 
   # check whether the new deployment is complete
