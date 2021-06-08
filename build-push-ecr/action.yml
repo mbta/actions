@@ -14,6 +14,10 @@ inputs:
   docker-repo:
     description: ECR Docker repo to push to
     required: true
+  dockerfile-path:
+    description: Path to the repo's Dockerfile
+    required: false
+    default: '.'
 outputs:
   docker-tag:
     description: Docker Tag
@@ -26,7 +30,7 @@ runs:
     - run: echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
       id: docker
       shell: bash
-    - run: docker build --pull -t ${{ steps.docker.outputs.tag }} .
+    - run: docker build --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
       shell: bash
     - run: >
         aws ecr get-login-password --region ${{ inputs.aws-region }}
