@@ -20,6 +20,10 @@ inputs:
   docker-tag:
     description: Docker tag to deploy
     required: true
+  requires-secrets:
+    description: Whether the service needs secrets
+    required: false
+    default: 'true'
 runs:
   using: composite
   steps:
@@ -32,3 +36,4 @@ runs:
         ECS_CLUSTER: ${{ inputs.ecs-cluster }}
         ECS_SERVICE: ${{ inputs.ecs-service }}
         DOCKER_TAG: ${{ inputs.docker-tag }}
+        REQUIRES_SECRETS: ${{ inputs.requires-secrets }}

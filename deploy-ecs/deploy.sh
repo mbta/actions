@@ -55,7 +55,7 @@ newcontainers="$(echo "${taskdefinition}" | \
   jq --arg tag "${DOCKER_TAG}" 'map(.image="\($tag)")')"
 
 # check to make sure the secrets are included in the new container definition
-if (echo "${newcontainers}" | jq '.[0] | .secrets' | grep '^null$'); then
+if [ "${REQUIRES_SECRETS}" = true ] && (echo "${newcontainers}" | jq '.[0] | .secrets' | grep '^null$'); then
   echo "Error: The container definition is missing its 'secrets' block. Deploy cannot proceed."
   exit 1
 fi
