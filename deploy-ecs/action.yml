@@ -21,7 +21,7 @@ inputs:
     description: Docker tag to deploy
     required: true
   requires-secrets:
-    description: Whether the service needs secrets
+    description: Whether the service needs secrets (expects "true" or "false")
     required: false
     default: 'true'
 runs:
