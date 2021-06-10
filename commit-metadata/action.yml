@@ -14,7 +14,9 @@ runs:
       id: git
       run: |
         echo ::set-output name=sha-short::$(git rev-parse --short ${{ github.sha }})
-        echo ::set-output name=commit-message::$(git log --format=%B -n 1 ${{ github.sha }} | head -n 1)
+        echo ::set-output name=commit-message::$(
+          git log --format=%B -n 1 ${{ github.sha }} | head -n 1
+        )
     - shell: bash
       run: |
         cat <<EOF

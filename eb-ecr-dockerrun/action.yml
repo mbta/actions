@@ -17,7 +17,9 @@ runs:
     - shell: bash
       id: build
       run: |
-        echo ::set-output name=package::$(mktemp -d $RUNNER_TEMP/package-XXXXXX)/${{ github.sha }}.zip
+        echo ::set-output name=package::$(
+            mktemp -d $RUNNER_TEMP/package-XXXXXX
+          )/${{ github.sha }}.zip
         echo ::set-output name=dir::$(mktemp -d $RUNNER_TEMP/deploy-XXXXXX)
     - shell: bash
       run: |
