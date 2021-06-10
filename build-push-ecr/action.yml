@@ -18,6 +18,10 @@ inputs:
     description: Path to the repo's Dockerfile
     required: false
     default: '.'
+  docker-additional-args:
+    description: Additional arguments to pass to call to docker
+    required: false
+    default: ''
 outputs:
   docker-tag:
     description: Docker Tag
@@ -30,7 +34,7 @@ runs:
     - run: echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
       id: docker
       shell: bash
-    - run: docker build --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
+    - run: docker build ${{ inputs.docker-additional-args }} --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
       shell: bash
     - run: >
         aws ecr get-login-password --region ${{ inputs.aws-region }}
