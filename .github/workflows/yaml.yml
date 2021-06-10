@@ -1,0 +1,14 @@
+name: Validate YAML
+
+on:  # Triggers the workflow on push or pull request events
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Validate YAML actions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: yamllint -f parsable .
