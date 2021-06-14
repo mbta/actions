@@ -24,6 +24,10 @@ inputs:
     description: Whether the service needs secrets (expects "true" or "false")
     required: false
     default: 'true'
+  launch-type:
+    description: ECS launch type ("FARGATE" or "EC2")
+    required: false
+    default: 'FARGATE'
 runs:
   using: composite
   steps:
@@ -37,3 +41,4 @@ runs:
         ECS_SERVICE: ${{ inputs.ecs-service }}
         DOCKER_TAG: ${{ inputs.docker-tag }}
         REQUIRES_SECRETS: ${{ inputs.requires-secrets }}
+        LAUNCH_TYPE: ${{ inputs.launch-type }}

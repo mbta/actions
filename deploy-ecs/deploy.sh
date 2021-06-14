@@ -60,18 +60,32 @@ if [ "${REQUIRES_SECRETS}" = true ] && (echo "${newcontainers}" | jq '.[0] | .se
   exit 1
 fi
 
-echo "Publishing new task definition."
-aws ecs register-task-definition \
-  --family "${ECS_SERVICE}" \
-  --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
-  --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
-  --network-mode "$(echo "${taskdefinition}" | jq -r '.taskDefinition.networkMode')" \
-  --container-definitions "${newcontainers}" \
-  --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
-  --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" \
-  --requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities')" \
-  --cpu "$(echo "${taskdefinition}" | jq -r '.taskDefinition.cpu')" \
-  --memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')"
+echo "Publishing new ${LAUNCH_TYPE} task definition."
+if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
+  aws ecs register-task-definition \
+    --family "${ECS_SERVICE}" \
+    --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
+    --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
+    --network-mode "$(echo "${taskdefinition}" | jq -r '.taskDefinition.networkMode')" \
+    --container-definitions "${newcontainers}" \
+    --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
+    --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" \
+    --requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities')" \
+    --cpu "$(echo "${taskdefinition}" | jq -r '.taskDefinition.cpu')" \
+    --memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')"
+elif [ "${LAUNCH_TYPE}" = "EC2" ]; then
+  aws ecs register-task-definition \
+    --family "${ECS_SERVICE}" \
+    --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
+    --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
+    --container-definitions "${newcontainers}" \
+    --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
+    --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')"
+else
+  echo "Error: expected 'FARGATE' or 'EC2' launch-type, got ${LAUNCH_TYPE}"
+  exit 1
+fi
+
 
 newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_SERVICE}" | \
   jq -r '.taskDefinition.revision')"
