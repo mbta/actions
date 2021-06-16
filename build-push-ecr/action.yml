@@ -34,7 +34,10 @@ runs:
     - run: echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
       id: docker
       shell: bash
-    - run: docker build ${{ inputs.docker-additional-args }} --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
+    - run: >
+        docker build
+        ${{ inputs.docker-additional-args }}
+        --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
       shell: bash
     - run: >
         aws ecr get-login-password --region ${{ inputs.aws-region }}
