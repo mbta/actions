@@ -28,8 +28,12 @@ field = {
     "value": f"{actor} {run_description} <{html_url}/actions/runs/{run_id}|{workflow}> {run_emoji}",
     "short": False,
 }
+fields = [field]
+if os.environ["CUSTOM_MESSAGE"]:
+    fields.append({"value": os.environ["CUSTOM_MESSAGE"]})
+
 body = {
-    "attachments": [{"fallback": fallback, "color": color, "fields": [field]}],
+    "attachments": [{"fallback": fallback, "color": color, "fields": fields}],
 }
 
 request = urllib.request.Request(
