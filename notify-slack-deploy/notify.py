@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import json
 import os
-import requests
+import urllib.request
+from pprint import pprint
 
 job_status = os.environ["JOB_STATUS"]
 github = json.loads(os.environ["GITHUB_ENVIRONMENT"])
@@ -31,4 +32,14 @@ body = {
     "attachments": [{"fallback": fallback, "color": color, "fields": [field]}],
 }
 
-print(requests.post(os.environ["SLACK_WEBHOOK"], json=body))
+request = urllib.request.Request(
+    os.environ["SLACK_WEBHOOK"], 
+    json.dumps(body).encode("utf-8"),
+    { "Content-Type": "application/json" }
+)
+
+with urllib.request.urlopen(request) as response:
+    print("Status:")
+    pprint(response.status)
+    print("Response body:")
+    pprint(response.read())
