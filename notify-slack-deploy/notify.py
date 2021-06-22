@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import json
 import os
-import requests
+import urllib.request
+from pprint import pprint
 
 job_status = os.environ["JOB_STATUS"]
 github = json.loads(os.environ["GITHUB_ENVIRONMENT"])
@@ -27,8 +28,22 @@ field = {
     "value": f"{actor} {run_description} <{html_url}/actions/runs/{run_id}|{workflow}> {run_emoji}",
     "short": False,
 }
+fields = [field]
+if os.environ["CUSTOM_MESSAGE"]:
+    fields.append({"value": os.environ["CUSTOM_MESSAGE"]})
+
 body = {
-    "attachments": [{"fallback": fallback, "color": color, "fields": [field]}],
+    "attachments": [{"fallback": fallback, "color": color, "fields": fields}],
 }
 
-print(requests.post(os.environ["SLACK_WEBHOOK"], json=body))
+request = urllib.request.Request(
+    os.environ["SLACK_WEBHOOK"], 
+    json.dumps(body).encode("utf-8"),
+    { "Content-Type": "application/json" }
+)
+
+with urllib.request.urlopen(request) as response:
+    print("Status:")
+    pprint(response.status)
+    print("Response body:")
+    pprint(response.read())
