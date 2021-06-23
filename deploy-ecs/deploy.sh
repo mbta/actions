@@ -12,6 +12,7 @@ set -e -u
 # - AWS_REGION
 # - ECS_CLUSTER
 # - ECS_SERVICE
+# - ECS_TASK_DEF
 # - DOCKER_TAG
 
 function check_deployment_complete() {
@@ -38,14 +39,14 @@ function check_deployment_complete() {
 export AWS_DEFAULT_REGION="${AWS_REGION}"
 
 # attempt to get the contents of the template task definition from ECS (for Terraform-built ECS services)
-echo "Retrieving ${ECS_SERVICE}-template task definition..."
-taskdefinition="$(aws ecs describe-task-definition --task-definition "${ECS_SERVICE}-template")" \
+echo "Retrieving ${ECS_TASK_DEF}-template task definition..."
+taskdefinition="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}-template")" \
   || echo "No template task definition was found."
 
 # if no template exists, attempt to get task definition currently running on AWS (for legacy ECS services)
 if [ -z "${taskdefinition}" ]; then
-  echo "Retrieving current ${ECS_SERVICE} task definition..."
-  taskdefinition=$(aws ecs describe-task-definition --task-definition "${ECS_SERVICE}")
+  echo "Retrieving current ${ECS_TASK_DEF} task definition..."
+  taskdefinition=$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}")
 fi
 
 # use retrieved task definition as basis for new revision, but replace image
@@ -63,7 +64,7 @@ fi
 echo "Publishing new ${LAUNCH_TYPE} task definition."
 if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
   aws ecs register-task-definition \
-    --family "${ECS_SERVICE}" \
+    --family "${ECS_TASK_DEF}" \
     --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
     --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
     --network-mode "$(echo "${taskdefinition}" | jq -r '.taskDefinition.networkMode')" \
@@ -75,7 +76,7 @@ if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
     --memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')"
 elif [ "${LAUNCH_TYPE}" = "EC2" ]; then
   aws ecs register-task-definition \
-    --family "${ECS_SERVICE}" \
+    --family "${ECS_TASK_DEF}" \
     --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
     --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
     --container-definitions "${newcontainers}" \
@@ -87,12 +88,12 @@ else
 fi
 
 
-newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_SERVICE}" | \
+newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}" | \
   jq -r '.taskDefinition.revision')"
 
 # redeploy the cluster
 echo "Updating service ${ECS_SERVICE} to use task definition ${newrevision}..."
-aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_SERVICE}:${newrevision}"
+aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}"
 
 # monitor the cluster for status
 deployment_finished=false
