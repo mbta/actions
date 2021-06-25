@@ -59748,7 +59748,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const { architecture, elixir_version, otp_release } = yield elixirVersions();
         const mixLockHash = yield hashFiles(["mix.lock", "apps/*/mix.lock"]);
-        const dialyzerPaths = [" _build/dev/*.plt*"];
+        const dialyzerPaths = [" _build/*/*.plt*"];
         const cacheKey = `${architecture}-dialyzer-${otp_release}-${elixir_version}-${mixLockHash}`;
         const restoreKeys = [
             `${architecture}-dialyzer-${otp_release}-${elixir_version}-`,

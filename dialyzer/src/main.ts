@@ -81,7 +81,7 @@ async function mixDialyzer(args: string[]): Promise<number> {
 async function run(): Promise<void> {
   const { architecture, elixir_version, otp_release } = await elixirVersions();
   const mixLockHash = await hashFiles(["mix.lock", "apps/*/mix.lock"]);
-  const dialyzerPaths = [" _build/dev/*.plt*"];
+  const dialyzerPaths = [" _build/*/*.plt*"];
   const cacheKey = `${architecture}-dialyzer-${otp_release}-${elixir_version}-${mixLockHash}`;
   const restoreKeys = [
     `${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
