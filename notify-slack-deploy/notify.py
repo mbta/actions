@@ -10,12 +10,7 @@ actor = github["actor"]
 workflow = github["workflow"]
 repository = github["repository"]
 run_id = github["run_id"]
-
-# In scheduled events, github["event"] is just the cron string
-if isinstance(github["event"], dict) and "repository" in github["event"]:
-    html_url = github["event"]["repository"]["html_url"]
-else:
-    html_url = f"https://www.github.com/{repository}"
+html_url = f"https://www.github.com/{repository}"
 
 run_description = {"success": "ran", "cancelled": "cancelled", "failure": "failed"}[
     job_status
