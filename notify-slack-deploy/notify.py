@@ -10,8 +10,8 @@ actor = github["actor"]
 workflow = github["workflow"]
 repository = github["repository"]
 run_id = github["run_id"]
-application = github["event"]["repository"]["name"]
-html_url = github["event"]["repository"]["html_url"]
+html_url = f"https://www.github.com/{repository}"
+
 run_description = {"success": "ran", "cancelled": "cancelled", "failure": "failed"}[
     job_status
 ]
