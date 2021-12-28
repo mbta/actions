@@ -1,4 +1,3 @@
-
 name: (ECS) Run Task
 description: For Amazon ECS, this action will run the task specified, and wait for it to complete.
 
@@ -42,7 +41,8 @@ runs:
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
-        AWS_DEFAULT_REGION: ${{ inputs.aws_default_region }} # note: not directly used in script, but used in AWS CLI
+        # note: not directly used in script, but used in AWS CLI
+        AWS_DEFAULT_REGION: ${{ inputs.aws_default_region }}
         ECS_CLUSTER: ${{ inputs.ecs_cluster}}
         ECS_TASK_DEFINITION: ${{ inputs.ecs_task_definition }}
         VPC_SUBNET: ${{ inputs.vpc_subnet }}
