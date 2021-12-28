@@ -1,0 +1,50 @@
+
+name: (ECS) Run Task
+description: For Amazon ECS, this action will run the task specified, and wait for it to complete.
+
+inputs:
+  # aws cli
+  # see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+  aws_access_key_id:
+    description: AWS_ACCESS_KEY_ID environment variable value.
+    required: true
+  aws_secret_access_key:
+    description: AWS_SECRET_ACCESS_KEY environment variable value.
+    required: true
+  aws_default_region:
+    description: AWS_DEFAULT_REGION environment variable value.
+    required: true
+
+  # task
+  ecs_cluster:
+    description: Amazon ECS Cluster to launch task in.
+    required: true
+  ecs_task_definition:
+    description: Amazon ECS Task Definition to base task on.
+    required: true
+
+  # network configuration for the container
+  vpc_subnet:
+    description: Amazon VPC Subnet for the container to use.
+    required: true
+  vpc_security_group:
+    description: Amazon VPC Security Group for the container to use.
+    required: true
+  vpc_assign_public_ip:
+    description: Amazon VPC setting to assign public IP to container (ENABLED or DISABLED).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/action.sh
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws_default_region }} # note: not directly used in script, but used in AWS CLI
+        ECS_CLUSTER: ${{ inputs.ecs_cluster}}
+        ECS_TASK_DEFINITION: ${{ inputs.ecs_task_definition }}
+        VPC_SUBNET: ${{ inputs.vpc_subnet }}
+        VPC_SECURITY_GROUP: ${{ inputs.vpc_security_group }}
+        VPC_ASSIGN_PUBLIC_IP: ${{ inputs.vpc_assign_public_ip }}
