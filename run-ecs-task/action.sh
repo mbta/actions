@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # run task from task definition
-task_run=$(aws ecs run-task --task-definition "${ECS_TASK_DEFINITION}" --cluster "${ECS_CLUSTER}" --launch-type FARGATE  --network-configuration "awsvpcConfiguration={subnets=[${VPC_SUBNET}],securityGroups=[${VPC_SECURITY_GROUP}],assignPublicIp=${VPC_ASSIGN_PUBLIC_IP}}")
+task_run=$(aws ecs run-task --task-definition "${ECS_TASK_DEFINITION}" --cluster "${ECS_CLUSTER}" --launch-type FARGATE --network-configuration "${ECS_TASK_NETWORK_CONFIGURATION}" --overrides "${ECS_TASK_OVERRIDES}")
 # get unique task arn
 task_arn=$(echo $task_run | jq '.tasks[0].taskArn')
 

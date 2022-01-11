@@ -21,16 +21,11 @@ inputs:
   ecs_task_definition:
     description: Amazon ECS Task Definition to base task on.
     required: true
-
-  # network configuration for the container
-  vpc_subnet:
-    description: Amazon VPC Subnet for the container to use.
+  ecs_task_network_configuration:
+    description: Amazon ECS Task network configuration.
     required: true
-  vpc_security_group:
-    description: Amazon VPC Security Group for the container to use.
-    required: true
-  vpc_assign_public_ip:
-    description: Amazon VPC setting to assign public IP to container (ENABLED or DISABLED).
+  ecs_task_overrides:
+    description: Amazon ECS Task overrides.
     required: true
 
 runs:
@@ -45,6 +40,5 @@ runs:
         AWS_DEFAULT_REGION: ${{ inputs.aws_default_region }}
         ECS_CLUSTER: ${{ inputs.ecs_cluster}}
         ECS_TASK_DEFINITION: ${{ inputs.ecs_task_definition }}
-        VPC_SUBNET: ${{ inputs.vpc_subnet }}
-        VPC_SECURITY_GROUP: ${{ inputs.vpc_security_group }}
-        VPC_ASSIGN_PUBLIC_IP: ${{ inputs.vpc_assign_public_ip }}
+        ECS_TASK_NETWORK_CONFIGURATION: ${{ inputs.ecs_task_network_configuration }}
+        ECS_TASK_OVERRIDES: ${{ inputs.ecs_task_overrides }}
