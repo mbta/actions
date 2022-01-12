@@ -23,10 +23,8 @@ inputs:
     required: true
   ecs_task_network_configuration:
     description: Amazon ECS Task network configuration.
-    required: true
   ecs_task_overrides:
     description: Amazon ECS Task overrides.
-    required: true
 
 runs:
   using: composite
