@@ -3,7 +3,7 @@
 # run task from task definition
 task_run=$(aws ecs run-task --task-definition "${ECS_TASK_DEFINITION}" --cluster "${ECS_CLUSTER}" --launch-type FARGATE --network-configuration "${ECS_TASK_NETWORK_CONFIGURATION}" --overrides "${ECS_TASK_OVERRIDES}")
 # get unique task arn
-task_arn=$(echo $task_run | jq '.tasks[0].taskArn')
+task_arn=$(echo "$task_run" | jq '.tasks[0].taskArn')
 
 # keep track of if finished, or timed out
 finished=false
@@ -13,9 +13,9 @@ time=0
 while [[ "${finished}" == "false" && "${timed_out}" == "false" ]] ; do
 
   # get the latest state of the task
-  task_description=$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks [$task_arn])
+  task_description=$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks ["$task_arn"])
   # get the latest status
-  task_status=$(echo $task_description | jq '.tasks[0].lastStatus')
+  task_status=$(echo "$task_description" | jq '.tasks[0].lastStatus')
 
   # check if in a completed state
   # see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-lifecycle.html
