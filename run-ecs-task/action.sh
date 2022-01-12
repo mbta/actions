@@ -36,7 +36,7 @@ done
 if [[ "${timed_out}" == "true" ]] ; then
   echo 'Run Task failed!'
   echo '----------------------------------------'
-  echo $task_description
+  echo "$task_description"
   echo '----------------------------------------'
   exit 1
 fi
