@@ -1,0 +1,42 @@
+name: (ECS) Run Task
+description: For Amazon ECS, this action will run the task specified, and wait for it to complete.
+
+inputs:
+  # aws cli
+  # see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+  aws_access_key_id:
+    description: AWS_ACCESS_KEY_ID environment variable value.
+    required: true
+  aws_secret_access_key:
+    description: AWS_SECRET_ACCESS_KEY environment variable value.
+    required: true
+  aws_default_region:
+    description: AWS_DEFAULT_REGION environment variable value.
+    required: true
+
+  # task
+  ecs_cluster:
+    description: Amazon ECS Cluster to launch task in.
+    required: true
+  ecs_task_definition:
+    description: Amazon ECS Task Definition to base task on.
+    required: true
+  ecs_task_network_configuration:
+    description: Amazon ECS Task network configuration.
+  ecs_task_overrides:
+    description: Amazon ECS Task overrides.
+
+runs:
+  using: composite
+  steps:
+    - run: ${{ github.action_path }}/action.sh
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+        # note: not directly used in script, but used in AWS CLI
+        AWS_DEFAULT_REGION: ${{ inputs.aws_default_region }}
+        ECS_CLUSTER: ${{ inputs.ecs_cluster}}
+        ECS_TASK_DEFINITION: ${{ inputs.ecs_task_definition }}
+        ECS_TASK_NETWORK_CONFIGURATION: ${{ inputs.ecs_task_network_configuration }}
+        ECS_TASK_OVERRIDES: ${{ inputs.ecs_task_overrides }}
