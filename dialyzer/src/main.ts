@@ -42,6 +42,7 @@ map = %{
   architecture: IO.iodata_to_binary(:erlang.system_info(:system_architecture)),
   elixir_version: System.version(),
   otp_release: System.otp_release(),
+  erts_version: IO.iodata_to_binary(:erlang.system_info(:version))
 }
 rough_json = map
 |> Enum.map(fn {key, value} -> [?", Atom.to_string(key), '":', inspect(value)] end)
@@ -52,6 +53,7 @@ async function elixirVersions(): Promise<{
   architecture: string;
   elixir_version: string;
   otp_release: string;
+  erts_version: string;
 }> {
   const tempDirectory: string = process.env["RUNNER_TEMP"] || "/tmp";
   const elixirScriptPath = `${tempDirectory}${path.sep}elixir_dialyzer_config.exs`;
@@ -79,11 +81,19 @@ async function mixDialyzer(args: string[]): Promise<number> {
 }
 
 async function run(): Promise<void> {
-  const { architecture, elixir_version, otp_release } = await elixirVersions();
+  const {
+    architecture,
+    elixir_version,
+    otp_release,
+    erts_version,
+  } = await elixirVersions();
   const mixLockHash = await hashFiles(["mix.lock", "apps/*/mix.lock"]);
   const dialyzerPaths = [" _build/*/*.plt*"];
-  const cacheKey = `${architecture}-dialyzer-${otp_release}-${elixir_version}-${mixLockHash}`;
+  const cacheKey = `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
   const restoreKeys = [
+    `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-`,
+    `${architecture}-dialyzer-${otp_release}-${erts_version}-`,
+    // previous version of the Dialyzer cache
     `${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
     `${architecture}-dialyzer-${otp_release}-`,
     `${architecture}-dialyzer-`,
