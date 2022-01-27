@@ -59709,6 +59709,7 @@ map = %{
   architecture: IO.iodata_to_binary(:erlang.system_info(:system_architecture)),
   elixir_version: System.version(),
   otp_release: System.otp_release(),
+  erts_version: IO.iodata_to_binary(:erlang.system_info(:version))
 }
 rough_json = map
 |> Enum.map(fn {key, value} -> [?", Atom.to_string(key), '":', inspect(value)] end)
@@ -59746,11 +59747,14 @@ function mixDialyzer(args) {
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const { architecture, elixir_version, otp_release } = yield elixirVersions();
+        const { architecture, elixir_version, otp_release, erts_version, } = yield elixirVersions();
         const mixLockHash = yield hashFiles(["mix.lock", "apps/*/mix.lock"]);
         const dialyzerPaths = [" _build/*/*.plt*"];
-        const cacheKey = `${architecture}-dialyzer-${otp_release}-${elixir_version}-${mixLockHash}`;
+        const cacheKey = `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
         const restoreKeys = [
+            `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-`,
+            `${architecture}-dialyzer-${otp_release}-${erts_version}-`,
+            // previous version of the Dialyzer cache
             `${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
             `${architecture}-dialyzer-${otp_release}-`,
             `${architecture}-dialyzer-`,
