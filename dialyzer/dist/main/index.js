@@ -59747,6 +59747,8 @@ function mixDialyzer(args) {
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        const workingDirectory = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput("working-directory");
+        process.chdir(workingDirectory);
         const { architecture, elixir_version, otp_release, erts_version, } = yield elixirVersions();
         const mixLockHash = yield hashFiles(["mix.lock", "apps/*/mix.lock"]);
         const dialyzerPaths = [" _build/*/*.plt*"];
