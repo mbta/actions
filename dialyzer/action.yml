@@ -4,6 +4,9 @@ inputs:
   cmd-line:
     description: Additional command line options to pass to `mix dialyzer`
     default: ""
+  working-directory:
+    description: Directory to change to before running Dialyzer
+    default: "."
 runs:
   using: "node12"
   main: "dist/main/index.js"

@@ -81,6 +81,9 @@ async function mixDialyzer(args: string[]): Promise<number> {
 }
 
 async function run(): Promise<void> {
+  const workingDirectory = core.getInput("working-directory");
+  process.chdir(workingDirectory);
+
   const {
     architecture,
     elixir_version,
