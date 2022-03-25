@@ -22,6 +22,10 @@ inputs:
     description: Additional arguments to pass to call to docker
     required: false
     default: ''
+  docker-additional-tags:
+    description: Additional tags for the image, separated by spaces
+    required: false
+    default: ''
 outputs:
   docker-tag:
     description: Docker Tag
@@ -48,3 +52,10 @@ runs:
       shell: bash
     - run: docker push ${{ steps.docker.outputs.tag }}
       shell: bash
+    - run: >
+        for tag in ${{ inputs.docker-additional-tags }}; do
+          docker tag ${{ steps.docker.outputs.tag }} ${{ inputs.docker-repo }}:$tag
+          docker push ${{ inputs.docker-repo }}:$tag
+        done
+      shell: bash
+      if: ${{ inputs.docker-additional-tags != '' }}
