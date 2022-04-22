@@ -59761,12 +59761,18 @@ function run() {
             `${architecture}-dialyzer-${otp_release}-`,
             `${architecture}-dialyzer-`,
         ];
-        const cacheId = yield _actions_cache__WEBPACK_IMPORTED_MODULE_2__.restoreCache(dialyzerPaths, cacheKey, restoreKeys);
-        if (cacheId) {
-            console.log("Restored cache:", cacheId);
+        let cacheId = null;
+        if (process.env["GITHUB_RUN_ATTEMPT"] == "1") {
+            cacheId = yield _actions_cache__WEBPACK_IMPORTED_MODULE_2__.restoreCache(dialyzerPaths, cacheKey, restoreKeys);
+            if (cacheId) {
+                console.log("Restored cache:", cacheId);
+            }
+            else {
+                console.log("Unable to restore cache:", cacheKey);
+            }
         }
         else {
-            console.log("Unable to restore cache:", cacheKey);
+            console.log("Skipping cache restore during job re-run.");
         }
         if (cacheId === cacheKey) {
             console.log("Cache hit, not building PLT.");
