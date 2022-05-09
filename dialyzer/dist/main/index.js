@@ -59752,15 +59752,23 @@ function run() {
         const { architecture, elixir_version, otp_release, erts_version, } = yield elixirVersions();
         const mixLockHash = yield hashFiles(["mix.lock", "apps/*/mix.lock"]);
         const dialyzerPaths = [" _build/*/*.plt*"];
-        const cacheKey = `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
-        const restoreKeys = [
-            `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-`,
-            `${architecture}-dialyzer-${otp_release}-${erts_version}-`,
-            // previous version of the Dialyzer cache
-            `${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
-            `${architecture}-dialyzer-${otp_release}-`,
-            `${architecture}-dialyzer-`,
-        ];
+        const cacheKeyVersion = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput("cache-key-version");
+        let cacheKey = `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
+        if (cacheKeyVersion !== "") {
+            cacheKey = `${cacheKey}-${cacheKeyVersion}`;
+        }
+        const shouldUseFallbackCacheKeys = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput("use-fallback-cache-keys") === "true";
+        console.log("Using fallback cache keys?", shouldUseFallbackCacheKeys);
+        const restoreKeys = shouldUseFallbackCacheKeys
+            ? [
+                `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-`,
+                `${architecture}-dialyzer-${otp_release}-${erts_version}-`,
+                // previous version of the Dialyzer cache
+                `${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
+                `${architecture}-dialyzer-${otp_release}-`,
+                `${architecture}-dialyzer-`,
+            ]
+            : [];
         let cacheId = null;
         if (process.env["GITHUB_RUN_ATTEMPT"] == "1") {
             cacheId = yield _actions_cache__WEBPACK_IMPORTED_MODULE_2__.restoreCache(dialyzerPaths, cacheKey, restoreKeys);
@@ -59779,6 +59787,7 @@ function run() {
         }
         else {
             try {
+                console.log("Rebuilding PLT");
                 yield mixDialyzer(["--plt"]);
                 yield _actions_cache__WEBPACK_IMPORTED_MODULE_2__.saveCache(dialyzerPaths, cacheKey);
                 console.log("Saved cache:", cacheKey);

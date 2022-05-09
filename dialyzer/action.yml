@@ -7,6 +7,12 @@ inputs:
   working-directory:
     description: Directory to change to before running Dialyzer
     default: "."
+  use-fallback-cache-keys:
+    description: Whether or not to use the fallback cache keys, which look for inexact matches.
+    default: "true"
+  cache-key-version:
+    description: a string to change the cache key if the old cached value is stale
+    default: ""
 runs:
   using: "node12"
   main: "dist/main/index.js"
