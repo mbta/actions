@@ -59755,7 +59755,7 @@ function run() {
         const cacheKeyVersion = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput("cache-key-version");
         let cacheKey = `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
         if (cacheKeyVersion !== "") {
-            cacheKey = `${cacheKey}-${cacheKeyVersion}`;
+            cacheKey = `${cacheKeyVersion}-${cacheKey}`;
         }
         const shouldUseFallbackCacheKeys = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput("use-fallback-cache-keys") === "true";
         console.log("Using fallback cache keys?", shouldUseFallbackCacheKeys);

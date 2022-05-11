@@ -95,7 +95,7 @@ async function run(): Promise<void> {
   const cacheKeyVersion = core.getInput("cache-key-version");
   let cacheKey = `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
   if (cacheKeyVersion !== "") {
-    cacheKey = `${cacheKey}-${cacheKeyVersion}`;
+    cacheKey = `${cacheKeyVersion}-${cacheKey}`;
   }
 
   const shouldUseFallbackCacheKeys =
