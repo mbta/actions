@@ -59753,20 +59753,18 @@ function run() {
         const mixLockHash = yield hashFiles(["mix.lock", "apps/*/mix.lock"]);
         const dialyzerPaths = [" _build/*/*.plt*"];
         const cacheKeyVersion = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput("cache-key-version");
-        let cacheKey = `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
-        if (cacheKeyVersion !== "") {
-            cacheKey = `${cacheKeyVersion}-${cacheKey}`;
-        }
+        const cacheKeyVersionPrefix = cacheKeyVersion === "" ? "" : `${cacheKeyVersion}-`;
+        const cacheKey = `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
         const shouldUseFallbackCacheKeys = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput("use-fallback-cache-keys") === "true";
         console.log("Using fallback cache keys?", shouldUseFallbackCacheKeys);
         const restoreKeys = shouldUseFallbackCacheKeys
             ? [
-                `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-`,
-                `${architecture}-dialyzer-${otp_release}-${erts_version}-`,
+                `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-`,
+                `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-${erts_version}-`,
                 // previous version of the Dialyzer cache
-                `${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
-                `${architecture}-dialyzer-${otp_release}-`,
-                `${architecture}-dialyzer-`,
+                `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
+                `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-`,
+                `${cacheKeyVersionPrefix}${architecture}-dialyzer-`,
             ]
             : [];
         let cacheId = null;
