@@ -92,15 +92,25 @@ async function run(): Promise<void> {
   } = await elixirVersions();
   const mixLockHash = await hashFiles(["mix.lock", "apps/*/mix.lock"]);
   const dialyzerPaths = [" _build/*/*.plt*"];
-  const cacheKey = `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
-  const restoreKeys = [
-    `${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-`,
-    `${architecture}-dialyzer-${otp_release}-${erts_version}-`,
-    // previous version of the Dialyzer cache
-    `${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
-    `${architecture}-dialyzer-${otp_release}-`,
-    `${architecture}-dialyzer-`,
-  ];
+  const cacheKeyVersion = core.getInput("cache-key-version");
+  const cacheKeyVersionPrefix =
+    cacheKeyVersion === "" ? "" : `${cacheKeyVersion}-`;
+  const cacheKey = `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-${mixLockHash}`;
+
+  const shouldUseFallbackCacheKeys =
+    core.getInput("use-fallback-cache-keys") === "true";
+  console.log("Using fallback cache keys?", shouldUseFallbackCacheKeys);
+  const restoreKeys = shouldUseFallbackCacheKeys
+    ? [
+        `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-${erts_version}-${elixir_version}-`,
+        `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-${erts_version}-`,
+        // previous version of the Dialyzer cache
+        `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-${elixir_version}-`,
+        `${cacheKeyVersionPrefix}${architecture}-dialyzer-${otp_release}-`,
+        `${cacheKeyVersionPrefix}${architecture}-dialyzer-`,
+      ]
+    : [];
+
   let cacheId = null;
 
   if (process.env["GITHUB_RUN_ATTEMPT"] == "1") {
@@ -117,6 +127,7 @@ async function run(): Promise<void> {
     console.log("Cache hit, not building PLT.");
   } else {
     try {
+      console.log("Rebuilding PLT");
       await mixDialyzer(["--plt"]);
       await cache.saveCache(dialyzerPaths, cacheKey);
       console.log("Saved cache:", cacheKey);
