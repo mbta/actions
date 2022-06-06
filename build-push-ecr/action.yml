@@ -11,6 +11,10 @@ inputs:
     description: AWS region to use
     required: true
     default: us-east-1
+  custom-tag:
+    description: Custom tag for image in ECR repo
+    required: false
+    default: ''
   docker-repo:
     description: ECR Docker repo to push to
     required: true
@@ -35,7 +39,13 @@ runs:
   steps:
     - run: test -n "${{ inputs.aws-access-key-id }}" -a -n "${{ inputs.aws-secret-access-key }}"
       shell: bash
-    - run: echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
+    - run: >
+        if [[ "${{ inputs.custom-tag }}" == '' ]]
+        then
+          echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
+        else
+          echo "::set-output name=tag::${{ inputs.docker-repo }}:${{ inputs.custom-tag }}"
+        fi
       id: docker
       shell: bash
     - run: >
