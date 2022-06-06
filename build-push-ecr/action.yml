@@ -49,18 +49,28 @@ runs:
       id: docker
       shell: bash
     - run: >
-        docker build
-        ${{ inputs.docker-additional-args }}
-        --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
-      shell: bash
-    - run: >
         aws ecr get-login-password --region ${{ inputs.aws-region }}
         | docker login --username AWS --password-stdin ${{ inputs.docker-repo }}
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
       shell: bash
-    - run: docker push ${{ steps.docker.outputs.tag }}
+      # check if image with this tag has already been built and uploaded
+    - run: >
+        repo_name_with_tag=$(echo "${{ steps.docker.outputs.tag }}" | cut -d/ -f2)
+        repo_name=$(echo $repo_name_with_tag | cut -d: -f1)
+        image_name=$(echo $repo_name_with_tag | cut -d: -f2)
+        echo "::set-output name=exists::$(aws ecr list-images --repository-name $repo_name | grep $image_name)"
+      shell: bash
+      id: image-check
+    - if: ${{ !steps.image-check.output.exists }}
+      run: >
+        docker build
+        ${{ inputs.docker-additional-args }}
+        --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
+      shell: bash
+    - if: ${{ !steps.image-check.output.exists }}
+      run: docker push ${{ steps.docker.outputs.tag }}
       shell: bash
     - run: >
         for tag in ${{ inputs.docker-additional-tags }}; do
