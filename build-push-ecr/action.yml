@@ -57,10 +57,10 @@ runs:
       shell: bash
       # check if image with this tag has already been built and uploaded
     - run: >
-        repo_name_with_tag=$(echo "${{ steps.docker.outputs.tag }}" | cut -d/ -f2)
-        repo_name=$(echo $repo_name_with_tag | cut -d: -f1)
-        image_name=$(echo $repo_name_with_tag | cut -d: -f2)
-        echo "::set-output name=exists::$(aws ecr list-images --repository-name $repo_name | grep $image_name)"
+        repo=$(echo "${{ steps.docker.outputs.tag }}" | cut -d/ -f2 | cut -d: -f1)
+        image=$(echo "${{ steps.docker.outputs.tag }}" | cut -d/ -f2 | cut -d: -f2)
+        image_in_repo=$(aws ecr list-images --repository-name $repo | grep $image)"
+        echo "::set-output name=exists::$image_in_repo"
       shell: bash
       id: image-check
     - if: ${{ !steps.image-check.output.exists }}
