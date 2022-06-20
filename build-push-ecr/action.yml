@@ -33,8 +33,12 @@ outputs:
 runs:
   using: composite
   steps:
-    - run: test -n "${{ inputs.aws-access-key-id }}" -a -n "${{ inputs.aws-secret-access-key }}"
-      shell: bash
+    - name: Login to AWS ECR
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.docker-repo }}
+        username: ${{ secrets.aws-access-key-id }}
+        password: ${{ secrets.aws-secret-access-key }}
     - run: echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
       id: docker
       shell: bash
@@ -42,13 +46,6 @@ runs:
         docker build
         ${{ inputs.docker-additional-args }}
         --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
-      shell: bash
-    - run: >
-        aws ecr get-login-password --region ${{ inputs.aws-region }}
-        | docker login --username AWS --password-stdin ${{ inputs.docker-repo }}
-      env:
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
       shell: bash
     - run: docker push ${{ steps.docker.outputs.tag }}
       shell: bash
