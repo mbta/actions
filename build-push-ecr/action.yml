@@ -29,7 +29,7 @@ inputs:
 outputs:
   docker-tag:
     description: Docker Tag
-    value: ${{ steps.docker.outputs.tag }}
+    value: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
 runs:
   using: composite
   steps:
@@ -39,20 +39,26 @@ runs:
         registry: ${{ secrets.docker-repo }}
         username: ${{ secrets.aws-access-key-id }}
         password: ${{ secrets.aws-secret-access-key }}
-    - run: echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
-      id: docker
+    - run: >
+        for tag in ${{ inputs.docker-additional-tags }}; do
+          echo "type=raw,priority=900,value=${tag},enable=true" >> tags.txt
+        done
+        echo "::set-output name=tags::$(cat tags.txt)"
       shell: bash
+      id: more-tags
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ secrets.docker-repo }}
+        tags: |
+          type=sha,priority=1000,prefix=git-
+          ${{ steps.more-tags.outputs.tags )}}
+
     - run: >
         docker build
         ${{ inputs.docker-additional-args }}
-        --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
+        --pull -t ${{ steps.meta.outputs.tags }} ${{ inputs.dockerfile-path }}
       shell: bash
-    - run: docker push ${{ steps.docker.outputs.tag }}
+    - run: docker push ${{ steps.meta.outputs.tags }}
       shell: bash
-    - run: >
-        for tag in ${{ inputs.docker-additional-tags }}; do
-          docker tag ${{ steps.docker.outputs.tag }} ${{ inputs.docker-repo }}:$tag
-          docker push ${{ inputs.docker-repo }}:$tag
-        done
-      shell: bash
-      if: ${{ inputs.docker-additional-tags != '' }}
