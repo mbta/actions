@@ -9,7 +9,7 @@ inputs:
     required: true
   aws-region:
     description: AWS region to use
-    required: true
+    required: false
     default: us-east-1
   docker-repo:
     description: ECR Docker repo to push to
@@ -29,33 +29,42 @@ inputs:
 outputs:
   docker-tag:
     description: Docker Tag
-    value: ${{ steps.docker.outputs.tag }}
+    value: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
 runs:
   using: composite
   steps:
-    - run: test -n "${{ inputs.aws-access-key-id }}" -a -n "${{ inputs.aws-secret-access-key }}"
-      shell: bash
-    - run: echo "::set-output name=tag::${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)"
-      id: docker
-      shell: bash
-    - run: >
-        docker build
-        ${{ inputs.docker-additional-args }}
-        --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
-      shell: bash
-    - run: >
-        aws ecr get-login-password --region ${{ inputs.aws-region }}
-        | docker login --username AWS --password-stdin ${{ inputs.docker-repo }}
-      env:
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
-      shell: bash
-    - run: docker push ${{ steps.docker.outputs.tag }}
-      shell: bash
+    - name: Login to AWS ECR
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.docker-repo }}
+        username: ${{ secrets.aws-access-key-id }}
+        password: ${{ secrets.aws-secret-access-key }}
     - run: >
         for tag in ${{ inputs.docker-additional-tags }}; do
-          docker tag ${{ steps.docker.outputs.tag }} ${{ inputs.docker-repo }}:$tag
-          docker push ${{ inputs.docker-repo }}:$tag
+          echo "type=raw,priority=900,value=${tag},enable=true" >> tags.txt
         done
+        echo "::set-output name=tags::$(cat tags.txt)"
       shell: bash
-      if: ${{ inputs.docker-additional-tags != '' }}
+      id: more-tags
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ secrets.docker-repo }}
+        tags: |
+          type=sha,priority=1000,prefix=git-
+          ${{ steps.more-tags.outputs.tags )}}
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Push to ECR
+      uses: docker/build-push-action@v3
+      id: docker-build
+      with:
+        push: true
+        pull: true
+        file: ${{ inputs.dockerfile-path }}
+        build-args: ${{ inputs.docker-additional-args }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha,src=/tmp/.buildx-cache
+        cache-to: type=gha,dest=/tmp/.buildx-cache,mode=max
