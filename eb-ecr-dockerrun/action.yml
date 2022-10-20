@@ -17,10 +17,10 @@ runs:
     - shell: bash
       id: build
       run: |
-        echo ::set-output name=package::$(
+        echo "package=$(
             mktemp -d $RUNNER_TEMP/package-XXXXXX
-          )/${{ github.sha }}.zip
-        echo ::set-output name=dir::$(mktemp -d $RUNNER_TEMP/deploy-XXXXXX)
+          )/${{ github.sha }}.zip" >> $GITHUB_OUTPUT
+        echo "dir=$(mktemp -d $RUNNER_TEMP/deploy-XXXXXX)" >> $GITHUB_OUTPUT
     - shell: bash
       run: |
         test -d rel/.ebextensions && cp -r rel/.ebextensions ${{ steps.build.outputs.dir }}

@@ -13,10 +13,10 @@ runs:
     - shell: bash
       id: git
       run: |
-        echo ::set-output name=sha-short::$(git rev-parse --short ${{ github.sha }})
-        echo ::set-output name=commit-message::$(
+        echo "sha-short=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_OUTPUT
+        echo "commit-message=$(
           git log --format=%B -n 1 ${{ github.sha }} | head -n 1
-        )
+        )" >> $GITHUB_OUTPUT
     - shell: bash
       run: |
         cat <<EOF
