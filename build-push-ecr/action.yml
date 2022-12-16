@@ -39,7 +39,14 @@ runs:
       id: docker
       shell: bash
     - run: >
-        docker build
+        docker run --rm --privileged aptman/qus -s -- -p
+      shell: bash
+    - run: docker run --rm -t arm64v8/ubuntu uname -m
+      shell: bash
+    - run: cat /proc/sys/fs/binfmt_misc/qemu-aarch64
+      shell: bash
+    - run: >
+        docker buildx build --platform linux/arm64
         ${{ inputs.docker-additional-args }}
         --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
       shell: bash
