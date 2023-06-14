@@ -28,7 +28,7 @@ inputs:
     required: false
     default: 'true'
   launch-type:
-    description: ECS launch type ("FARGATE" or "EC2")
+    description: ECS launch type ("FARGATE", "EC2", or "EXTERNAL")
     required: false
     default: 'FARGATE'
 runs:
