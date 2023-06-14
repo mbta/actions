@@ -74,7 +74,7 @@ if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
     --requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities')" \
     --cpu "$(echo "${taskdefinition}" | jq -r '.taskDefinition.cpu')" \
     --memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')"
-elif [ "${LAUNCH_TYPE}" = "EC2" ]; then
+elif [ "${LAUNCH_TYPE}" = "EC2" ] || [ "${LAUNCH_TYPE}" = "EXTERNAL" ]; then
   aws ecs register-task-definition \
     --family "${ECS_TASK_DEF}" \
     --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
@@ -83,7 +83,7 @@ elif [ "${LAUNCH_TYPE}" = "EC2" ]; then
     --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
     --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')"
 else
-  echo "Error: expected 'FARGATE' or 'EC2' launch-type, got ${LAUNCH_TYPE}"
+  echo "Error: expected 'FARGATE', 'EC2', or 'EXTERNAL' launch-type, got ${LAUNCH_TYPE}"
   exit 1
 fi
 
