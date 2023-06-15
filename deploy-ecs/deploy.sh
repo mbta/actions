@@ -25,7 +25,7 @@ function check_deployment_complete() {
   deployment_details="${1}"
 
   # get and print current task counts
-  desired_count="$(echo "${deployment_details}" | jq -r '.desiredCount')"
+  desired_count="$(echo "${deployment_details}" | jq -r '[.desiredCount, 1] | max')"
   pending_count="$(echo "${deployment_details}" | jq -r '.pendingCount')"
   running_count="$(echo "${deployment_details}" | jq -r '.runningCount')"
   echo "Desired count: ${desired_count}"
