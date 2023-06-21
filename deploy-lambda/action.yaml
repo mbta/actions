@@ -1,0 +1,32 @@
+name: Deploy To Environment
+description: Deploy a zip to lambda
+inputs:
+  role-to-assume:
+    description: IAM role
+    required: true
+  lambda-function:
+    description: Lambda function name
+    required: true
+  slack-webhook-url:
+    description: Slack URL to post to
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ inputs.role-to-assume }}
+        aws-region: us-east-1 # your AWS region
+    - name: Package the Lambda function
+      run: |
+        zip -r function.zip .
+    - name: Deploy to AWS Lambda
+      run: |
+        aws lambda update-function-code --function-name ${{ inputs.lambda-function }} --zip-file fileb://function.zip
+    - uses: mbta/actions/notify-slack-deploy@v1
+      if: ${{ !cancelled() }}
+      with:
+        webhook-url: ${{ inputs.slack-webhook-url }}
+        job-status: ${{ job.status }}
