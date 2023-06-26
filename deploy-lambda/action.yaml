@@ -35,7 +35,9 @@ runs:
         zip ${{ inputs.zip-flags }} function.zip ${{ inputs.path-to-zip }}
     - name: Deploy to AWS Lambda
       run: |
-        aws lambda update-function-code --function-name ${{ inputs.lambda-function }} --zip-file fileb://function.zip
+        aws lambda update-function-code \
+          --function-name ${{ inputs.lambda-function }} \
+          --zip-file fileb://function.zip
     - uses: mbta/actions/notify-slack-deploy@v1
       if: ${{ !cancelled() }}
       with:
