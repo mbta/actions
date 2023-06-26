@@ -3,8 +3,7 @@ description: Loads NPM dependencies for a CI job, installing them if not cached
 inputs:
   node-version:
     description: Node version
-    required: false
-    default: '14'
+    required: true
 runs:
   using: composite
   steps:
