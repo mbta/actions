@@ -1,12 +1,17 @@
 name: Set up deps
 description: Loads NPM dependencies for a CI job, installing them if not cached
+inputs:
+  node-version:
+    description: Node version
+    required: false
+    default: '14'
 runs:
   using: composite
   steps:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14'
+        node-version: ${{ inputs.node-version }}
     - uses: actions/cache@v2
       id: deps-cache
       with:

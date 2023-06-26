@@ -4,13 +4,24 @@ inputs:
   role-to-assume:
     description: IAM role
     required: true
+  aws-region:
+    description: AWS region to use
+    required: true
+    default: us-east-1
   lambda-function:
     description: Lambda function name
     required: true
   slack-webhook-url:
     description: Slack URL to post to
     required: true
-
+  path-to-zip:
+    description: Path to files
+    required: false
+    default: '.'
+  zip-flags:
+    description: Files to zip
+    required: false
+    default: '-r'
 runs:
   using: 'composite'
   steps:
@@ -18,10 +29,10 @@ runs:
       uses: aws-actions/configure-aws-credentials@v1
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
-        aws-region: us-east-1 # your AWS region
+        aws-region: ${{ inputs.aws-region }}
     - name: Package the Lambda function
       run: |
-        zip -r function.zip .
+        zip ${{ inputs.zip-flags }} function.zip ${{ inputs.path-to-zip }}
     - name: Deploy to AWS Lambda
       run: |
         aws lambda update-function-code --function-name ${{ inputs.lambda-function }} --zip-file fileb://function.zip
