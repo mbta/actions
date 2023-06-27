@@ -6,7 +6,7 @@ inputs:
     required: true
   aws-region:
     description: AWS region to use
-    required: true
+    required: false
     default: us-east-1
   lambda-function:
     description: Lambda function name
