@@ -19,5 +19,4 @@ runs:
     - run: npm ci
       shell: bash
       if: "!steps.deps-cache.outputs.cache-hit"
-    - name: Install dependencies
-      run: npm install
+
