@@ -15,7 +15,7 @@ runs:
       id: deps-cache
       with:
         path: node_modules
-        key: ${{ env.CACHE_UUID }}-node-${{ hashFiles('package-lock.json') }}
+        key: ${{ secrets.CACHE_UUID }}-node-${{ hashFiles('package-lock.json') }}
     - run: npm ci
       shell: bash
       if: "!steps.deps-cache.outputs.cache-hit"
