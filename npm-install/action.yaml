@@ -4,9 +4,6 @@ inputs:
   node-version:
     description: Node version
     required: true
-  cache-uuid:
-    description: CACHE UUID
-    required: true
 runs:
   using: composite
   steps:
@@ -18,7 +15,7 @@ runs:
       id: deps-cache
       with:
         path: node_modules
-        key: ${{ inputs.cache-uuid }}-node-${{ hashFiles('package-lock.json') }}
+        key: ci-${{ hashFiles('package-lock.json') }}
     - run: npm ci
       shell: bash
       if: "!steps.deps-cache.outputs.cache-hit"
