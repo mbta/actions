@@ -31,9 +31,11 @@ runs:
         role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
     - name: Package the Lambda function
+      shell: bash
       run: |
         zip ${{ inputs.zip-flags }} function.zip ${{ inputs.path-to-zip }}
     - name: Deploy to AWS Lambda
+      shell: bash
       run: |
         aws lambda update-function-code \
           --function-name ${{ inputs.lambda-function }} \
