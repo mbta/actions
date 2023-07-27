@@ -5,8 +5,7 @@ This action will run your ECS Task Definition as a task on Fargate. The action w
 
 ### Inputs
 
-* **aws_access_key_id**: (Required) Will be passed to GitHub Actions environment as the AWS_ACCESS_KEY_ID environment variable to be used in AWS CLI commands.
-* **aws_secret_access_key**: (Required) Will be passed to GitHub Actions environment as the AWS_SECRET_ACCESS_KEY environment variable to be used in AWS CLI commands.
+* **role-to-assume**: (Required) Will be passed to GitHub Actions environment as the role-to-assume environment variable to be used in AWS CLI commands as it generates temp keys.
 * **aws_default_region**: (Required) Will be passed to GitHub Actions environment as the AWS_DEFAULT_REGION environment variable to be used in AWS CLI commands (from `aws configure`).
 * **ecs_cluster**: (Required) Cluster ARN to be used for running the task (ex. `arn:aws:ecs:{aws-region}:{aws-account-id}:cluster/{cluster-name}`). 
 * **ecs_task_definition**: (Required) Task Definition ARN to base the task on (ex. `arn:aws:ecs:{aws-region}:{aws-account-id}:task-definition/{task-definition-name}`).
