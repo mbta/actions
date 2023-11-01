@@ -50,7 +50,7 @@ runs:
     - run: docker push ${{ steps.docker.outputs.tag }}
       shell: bash
     - run: >
-        docker_additional_tags=(${{ inputs.docker-additional-tags }})
+        docker_additional_tags=(${{ inputs.docker-additional-tags }});
         for tag in ${docker_additional_tags[@]}; do
           docker tag ${{ steps.docker.outputs.tag }} ${{ inputs.docker-repo }}:$tag
           docker push ${{ inputs.docker-repo }}:$tag
