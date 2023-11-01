@@ -31,7 +31,7 @@ runs:
   using: composite
   steps:
     - name: Setup AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
@@ -50,7 +50,8 @@ runs:
     - run: docker push ${{ steps.docker.outputs.tag }}
       shell: bash
     - run: >
-        for tag in ${{ inputs.docker-additional-tags }}; do
+        docker_additional_tags=(${{ inputs.docker-additional-tags }})
+        for tag in ${docker_additional_tags[@]}; do
           docker tag ${{ steps.docker.outputs.tag }} ${{ inputs.docker-repo }}:$tag
           docker push ${{ inputs.docker-repo }}:$tag
         done
