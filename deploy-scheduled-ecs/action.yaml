@@ -1,0 +1,42 @@
+name: Deploy Scheduled ECS to Environment
+description: Deploy a Docker image (in ECR) to an ECS task
+
+inputs:
+  role-to-assume:
+    description: IAM role
+    required: true
+  aws-region:
+    description: AWS region to use
+    required: true
+    default: us-east-1
+  ecs-cluster:
+    description: ECS Cluster for the service being updated
+    required: true
+  ecs-service:
+    description: ECS Service containing the task being updated
+    required: true
+  ecs-task-definition:
+    description: task definition to update with new revision
+    required: true
+  docker-tag:
+    description: tag for the docker image to use in the new task definition
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ inputs.role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
+    - name: Deploy to ECS
+      id: deploy-ecs
+      run: ${{ github.action_path }}/deploy.sh
+      shell: bash
+      env:
+        AWS_REGION: ${{ inputs.aws-region }}
+        ECS_CLUSTER: ${{ inputs.ecs-cluster }}
+        ECS_SERVICE: ${{ inputs.ecs-service }}
+        ECS_TASK_DEF: ${{ inputs.ecs-task-definition }}
+        DOCKER_TAG: ${{ inputs.docker-tag }}
