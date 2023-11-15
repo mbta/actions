@@ -38,7 +38,7 @@ inputs:
 outputs:
   docker-tag:
     description: Docker Tag
-    value: ${{ steps.meta.outputs.version }}
+    value: ${{ inputs.docker-repo }}:${{ steps.meta.outputs.version }}
 runs:
   using: composite
   steps:
