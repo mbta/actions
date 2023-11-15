@@ -113,3 +113,4 @@ runs:
     - uses: aws-actions/amazon-ecr-login@v2
     - name: docker push
       run: docker push --all-tags ${{ inputs.docker-repo }}
+      shell: bash
