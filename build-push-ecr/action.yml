@@ -103,6 +103,7 @@ runs:
     - uses: docker/setup-buildx-action@v3
     - uses: docker/build-push-action@v5
       with:
+        pull: true
         load: true
         context: ${{ inputs.dockerfile-path }}
         build-args: ${{ steps.build-args.outputs.build-args }}
