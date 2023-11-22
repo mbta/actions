@@ -8,6 +8,6 @@ updates:
     schedule:
       interval: "weekly"
     reviewers:
-      - "mbta/ctd-infrastructure"
+      - "mbta/tid-tech-leads"
     commit-message:
       prefix: "[github-actions]"
