@@ -18,11 +18,14 @@ set -e -u
 function check_deployment_complete() {
   # extract task counts and test whether they match the desired state
   local deployment_details
+  local id
   local rollout_status
   local desired_count
   local pending_count
   local running_count
   deployment_details="${1}"
+
+  id="$(echo "${deployment_details}" | jq -r '.id')"
 
   # get rollout state
   rollout_status="$(echo "${deployment_details}" | jq -r '.rolloutState')"
@@ -32,9 +35,10 @@ function check_deployment_complete() {
   pending_count="$(echo "${deployment_details}" | jq -r '.pendingCount')"
   running_count="$(echo "${deployment_details}" | jq -r '.runningCount')"
 
-  # print status, and task counts
+  # print current id, status, and task counts
   printf \
-    "Status: %+12s, Running: %3d, Pending: %3d, Desired: %3d\n" \
+    "id: %s, Status: %+12s, Running: %3d, Pending: %3d, Desired: %3d\n" \
+    "${id}" \
     "${rollout_state}" \
     "${running_count}" \
     "${pending_count}" \
