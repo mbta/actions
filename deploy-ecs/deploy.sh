@@ -42,7 +42,7 @@ function check_deployment_complete() {
   printf \
     "id: %s, Status: %+12s, Running: %3d, Failed: %3d, Pending: %3d, Desired: %3d\n" \
     "${id}" \
-    "${rollout_state}" \
+    "${rollout_status}" \
     "${running_count}" \
     "${failed_count}" \
     "${pending_count}" \
