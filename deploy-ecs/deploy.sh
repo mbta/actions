@@ -134,7 +134,6 @@ while [ "${deployment_finished}" = "false" ]; do
       exit 1
     fi
     # wait, then loop
-    echo "Waiting for new tasks to start..."
     sleep 5
   fi
 done
