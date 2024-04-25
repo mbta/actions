@@ -19,10 +19,15 @@ function check_deployment_complete() {
   # extract task counts and test whether they match the desired state
 
   local deployment_details
+  local rollout_status
   local desired_count
   local pending_count
   local running_count
   deployment_details="${1}"
+
+  # get rollout state
+  rollout_status="$(echo "${deployment_details}" | jq -r '.rolloutState')"
+  echo "Rollout Status: ${rollout_status}"
 
   # get and print current task counts
   desired_count="$(echo "${deployment_details}" | jq -r '[.desiredCount, 1] | max')"
@@ -31,8 +36,12 @@ function check_deployment_complete() {
   echo "Desired count: ${desired_count}"
   echo "Pending count: ${pending_count}"
   echo "Running count: ${running_count}"
-  # if the number of running tasks equals the number of desired tasks, then we're all set
-  [ "${pending_count}" -eq "0" ] && [ "${running_count}" -eq "${desired_count}" ]
+
+  # ensure that AWS believes the deployment to be completed
+  # and if the number of running tasks equals the number of desired tasks, then we're all set
+  [[ "${rollout_status}" = "COMPLETED" ]] \
+  && [[ "${pending_count}" -eq "0" ]] \
+  && [[ "${running_count}" -eq "${desired_count}" ]]
 }
 
 # set default region so we don't have to specify --region everywhere
