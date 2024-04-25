@@ -17,7 +17,6 @@ set -e -u
 
 function check_deployment_complete() {
   # extract task counts and test whether they match the desired state
-
   local deployment_details
   local rollout_status
   local desired_count
@@ -27,15 +26,19 @@ function check_deployment_complete() {
 
   # get rollout state
   rollout_status="$(echo "${deployment_details}" | jq -r '.rolloutState')"
-  echo "Rollout Status: ${rollout_status}"
 
-  # get and print current task counts
+  # get current task counts
   desired_count="$(echo "${deployment_details}" | jq -r '[.desiredCount, 1] | max')"
   pending_count="$(echo "${deployment_details}" | jq -r '.pendingCount')"
   running_count="$(echo "${deployment_details}" | jq -r '.runningCount')"
-  echo "Desired count: ${desired_count}"
-  echo "Pending count: ${pending_count}"
-  echo "Running count: ${running_count}"
+
+  # print status, and task counts
+  printf \
+    "Status: %+12s, Running: %3d, Pending: %3d, Desired: %3d\n" \
+    "${rollout_state}" \
+    "${running_count}" \
+    "${pending_count}" \
+    "${desired_count}"
 
   # ensure that AWS believes the deployment to be completed
   # and if the number of running tasks equals the number of desired tasks, then we're all set
