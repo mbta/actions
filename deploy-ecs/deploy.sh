@@ -32,7 +32,7 @@ function check_deployment_complete() {
   echo "Pending count: ${pending_count}"
   echo "Running count: ${running_count}"
   # if the number of running tasks equals the number of desired tasks, then we're all set
-  [ "${pending_count}" -eq "0" ] && [ "${running_count}" -eq "${desired_count}" ]
+  [[ "${pending_count}" -eq "0" ]] && [[ "${running_count}" -eq "${desired_count}" ]]
 }
 
 # set default region so we don't have to specify --region everywhere
