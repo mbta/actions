@@ -23,6 +23,8 @@ function check_deployment_complete() {
   local desired_count
   local pending_count
   local running_count
+  local failed_count
+
   deployment_details="${1}"
 
   id="$(echo "${deployment_details}" | jq -r '.id')"
@@ -34,13 +36,15 @@ function check_deployment_complete() {
   desired_count="$(echo "${deployment_details}" | jq -r '[.desiredCount, 1] | max')"
   pending_count="$(echo "${deployment_details}" | jq -r '.pendingCount')"
   running_count="$(echo "${deployment_details}" | jq -r '.runningCount')"
+  failed_count="$(echo "${deployment_details}" | jq -r '.failedTasks')"
 
   # print current id, status, and task counts
   printf \
-    "id: %s, Status: %+12s, Running: %3d, Pending: %3d, Desired: %3d\n" \
+    "id: %s, Status: %+12s, Running: %3d, Failed: %3d, Pending: %3d, Desired: %3d\n" \
     "${id}" \
     "${rollout_state}" \
     "${running_count}" \
+    "${failed_count}" \
     "${pending_count}" \
     "${desired_count}"
 
