@@ -17,25 +17,36 @@ set -e -u
 
 function check_deployment_complete() {
   # extract task counts and test whether they match the desired state
-
   local deployment_details
+  local id
   local rollout_status
   local desired_count
   local pending_count
   local running_count
+  local failed_count
+
   deployment_details="${1}"
+
+  id="$(echo "${deployment_details}" | jq -r '.id')"
 
   # get rollout state
   rollout_status="$(echo "${deployment_details}" | jq -r '.rolloutState')"
-  echo "Rollout Status: ${rollout_status}"
 
-  # get and print current task counts
+  # get current task counts
   desired_count="$(echo "${deployment_details}" | jq -r '[.desiredCount, 1] | max')"
   pending_count="$(echo "${deployment_details}" | jq -r '.pendingCount')"
   running_count="$(echo "${deployment_details}" | jq -r '.runningCount')"
-  echo "Desired count: ${desired_count}"
-  echo "Pending count: ${pending_count}"
-  echo "Running count: ${running_count}"
+  failed_count="$(echo "${deployment_details}" | jq -r '.failedTasks')"
+
+  # print current id, status, and task counts
+  printf \
+    "id: %s, Status: %+12s, Running: %3d, Failed: %3d, Pending: %3d, Desired: %3d\n" \
+    "${id}" \
+    "${rollout_state}" \
+    "${running_count}" \
+    "${failed_count}" \
+    "${pending_count}" \
+    "${desired_count}"
 
   # ensure that AWS believes the deployment to be completed
   # and if the number of running tasks equals the number of desired tasks, then we're all set
@@ -131,7 +142,6 @@ while [ "${deployment_finished}" = "false" ]; do
       exit 1
     fi
     # wait, then loop
-    echo "Waiting for new tasks to start..."
     sleep 5
   fi
 done
