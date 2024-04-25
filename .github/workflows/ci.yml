@@ -1,14 +1,21 @@
-name: Validate YAML
+name: CI
 
 on:  # Triggers the workflow on push or pull request events
   push:
   pull_request:
 
 jobs:
-  build:
+  yaml:
     name: Validate YAML actions
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
       - run: yamllint -f parsable .
+  chmod:
+    name: Ensure .sh files have chmod +x
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: find . -name '*.sh' \! -executable | (! grep .)
