@@ -13,9 +13,12 @@ jobs:
       - uses: actions/checkout@v4
       - run: yamllint -f parsable .
   chmod:
-    name: Ensure .sh files have chmod +x
+    name: Check shell scripts
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - run: find . -name '*.sh' \! -executable | (! grep .)
+      - name: shellcheck
+        run: find . -name '*.sh' | xargs shellcheck -S warning
+      - name: Ensure .sh files have chmod +x
+        run: find . -name '*.sh' \! -executable | (! grep .)
