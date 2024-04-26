@@ -117,7 +117,7 @@ echo "::group::Updating service ${ECS_SERVICE} to use task definition ${newrevis
 aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}"
 echo "::endgroup::"
 
-# monitor the cluster for status
+echo "::group::Wait for the new clister to stabilize"
 deployment_finished=false
 while [ "${deployment_finished}" = "false" ]; do
   # get the service details
@@ -127,6 +127,7 @@ while [ "${deployment_finished}" = "false" ]; do
 
   # check whether the new deployment is complete
   if check_deployment_complete "${new_deployment}"; then
+    echo "::endgroup::"
     echo "Deployment complete."
     deployment_finished=true
   else
@@ -136,6 +137,8 @@ while [ "${deployment_finished}" = "false" ]; do
     stopped_tasks="$(aws ecs list-tasks --cluster "${ECS_CLUSTER}" --started-by "${new_deployment_id}" --desired-status "STOPPED" | jq -r '.taskArns')"
     stopped_task_count="$(echo "${stopped_tasks}" | jq -r 'length')"
     if [ "${stopped_task_count}" -gt "0" ]; then
+      echo "::endgroup::"
+
       # if there are stopped tasks, print the reason they stopped and then exit
       stopped_task_list="$(echo "${stopped_tasks}" | jq -r 'join(",")')"
       stopped_reasons="$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks "${stopped_task_list}" | jq -r '.tasks[].stoppedReason')"
@@ -147,6 +150,7 @@ while [ "${deployment_finished}" = "false" ]; do
     sleep 5
   fi
 done
+echo "::endgroup::"
 
 # confirm that the old deployment is torn down
 teardown_finished=false
