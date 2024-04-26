@@ -113,8 +113,9 @@ newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DE
   jq -r '.taskDefinition.revision')"
 
 # redeploy the cluster
-echo "Updating service ${ECS_SERVICE} to use task definition ${newrevision}..."
+echo "::group::Updating service ${ECS_SERVICE} to use task definition ${newrevision}..."
 aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}"
+echo "::endgroup::"
 
 # monitor the cluster for status
 deployment_finished=false
