@@ -152,7 +152,7 @@ while [ "${deployment_finished}" = "false" ]; do
 done
 echo "::endgroup::"
 
-# confirm that the old deployment is torn down
+echo "::group::confirm that the old deployment is torn down"
 teardown_finished=false
 while [ "${teardown_finished}" = "false" ]; do
   # get the service details
@@ -181,5 +181,6 @@ while [ "${teardown_finished}" = "false" ]; do
     sleep 5
   fi
 done
+echo "::endgroup::"
 
 echo "Done."
