@@ -81,7 +81,7 @@ if [ "${REQUIRES_SECRETS}" = true ] && (echo "${newcontainers}" | jq '.[0] | .se
   exit 1
 fi
 
-echo "Publishing new ${LAUNCH_TYPE} task definition."
+echo "::group::Publishing new ${LAUNCH_TYPE} task definition."
 if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
   aws ecs register-task-definition \
     --family "${ECS_TASK_DEF}" \
@@ -103,10 +103,11 @@ elif [ "${LAUNCH_TYPE}" = "EC2" ] || [ "${LAUNCH_TYPE}" = "EXTERNAL" ]; then
     --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
     --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')"
 else
+  echo "::endgroup::"
   echo "Error: expected 'FARGATE', 'EC2', or 'EXTERNAL' launch-type, got ${LAUNCH_TYPE}"
   exit 1
 fi
-
+echo "::endgroup::" # publishing task definition
 
 newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}" | \
   jq -r '.taskDefinition.revision')"
