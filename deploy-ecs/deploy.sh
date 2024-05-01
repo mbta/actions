@@ -117,7 +117,7 @@ echo "::group::Updating service ${ECS_SERVICE} to use task definition ${newrevis
 aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}"
 echo "::endgroup::"
 
-echo "::group::Wait for the new clister to stabilize"
+echo "::group::Wait for the new cluster to stabilize"
 deployment_finished=false
 while [ "${deployment_finished}" = "false" ]; do
   # get the service details
