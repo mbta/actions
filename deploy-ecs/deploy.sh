@@ -81,7 +81,7 @@ if [ "${REQUIRES_SECRETS}" = true ] && (echo "${newcontainers}" | jq '.[0] | .se
   exit 1
 fi
 
-echo "Publishing new ${LAUNCH_TYPE} task definition."
+echo "::group::Publishing new ${LAUNCH_TYPE} task definition."
 if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
   aws ecs register-task-definition \
     --family "${ECS_TASK_DEF}" \
@@ -103,19 +103,21 @@ elif [ "${LAUNCH_TYPE}" = "EC2" ] || [ "${LAUNCH_TYPE}" = "EXTERNAL" ]; then
     --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
     --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')"
 else
+  echo "::endgroup::"
   echo "Error: expected 'FARGATE', 'EC2', or 'EXTERNAL' launch-type, got ${LAUNCH_TYPE}"
   exit 1
 fi
-
+echo "::endgroup::" # publishing task definition
 
 newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}" | \
   jq -r '.taskDefinition.revision')"
 
 # redeploy the cluster
-echo "Updating service ${ECS_SERVICE} to use task definition ${newrevision}..."
+echo "::group::Updating service ${ECS_SERVICE} to use task definition ${newrevision}..."
 aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}"
+echo "::endgroup::"
 
-# monitor the cluster for status
+echo "::group::Wait for the new cluster to stabilize"
 deployment_finished=false
 while [ "${deployment_finished}" = "false" ]; do
   # get the service details
@@ -125,6 +127,7 @@ while [ "${deployment_finished}" = "false" ]; do
 
   # check whether the new deployment is complete
   if check_deployment_complete "${new_deployment}"; then
+    echo "::endgroup::"
     echo "Deployment complete."
     deployment_finished=true
   else
@@ -134,6 +137,8 @@ while [ "${deployment_finished}" = "false" ]; do
     stopped_tasks="$(aws ecs list-tasks --cluster "${ECS_CLUSTER}" --started-by "${new_deployment_id}" --desired-status "STOPPED" | jq -r '.taskArns')"
     stopped_task_count="$(echo "${stopped_tasks}" | jq -r 'length')"
     if [ "${stopped_task_count}" -gt "0" ]; then
+      echo "::endgroup::"
+
       # if there are stopped tasks, print the reason they stopped and then exit
       stopped_task_list="$(echo "${stopped_tasks}" | jq -r 'join(",")')"
       stopped_reasons="$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks "${stopped_task_list}" | jq -r '.tasks[].stoppedReason')"
@@ -145,8 +150,9 @@ while [ "${deployment_finished}" = "false" ]; do
     sleep 5
   fi
 done
+echo "::endgroup::"
 
-# confirm that the old deployment is torn down
+echo "::group::confirm that the old deployment is torn down"
 teardown_finished=false
 while [ "${teardown_finished}" = "false" ]; do
   # get the service details
@@ -175,5 +181,6 @@ while [ "${teardown_finished}" = "false" ]; do
     sleep 5
   fi
 done
+echo "::endgroup::"
 
 echo "Done."
