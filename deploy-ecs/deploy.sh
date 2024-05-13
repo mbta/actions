@@ -30,7 +30,7 @@ function check_deployment_complete() {
   id="$(echo "${deployment_details}" | jq -r '.id')"
 
   # get rollout state
-  rollout_status="$(echo "${deployment_details}" | jq -r '.rolloutState')"
+  rollout_status="$(echo "${deployment_details}" | jq -r '.rolloutState // "COMPLETED"')"
 
   # get current task counts
   desired_count="$(echo "${deployment_details}" | jq -r '[.desiredCount, 1] | max')"
