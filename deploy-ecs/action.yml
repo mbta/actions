@@ -28,6 +28,10 @@ inputs:
     description: ECS launch type ("FARGATE", "EC2", or "EXTERNAL")
     required: false
     default: 'FARGATE'
+  allow-zero-desired:
+    description: Whether the deploy allows the ECS desiredCount to be 0 (expects "true" or "false")
+    required: false
+    default: 'false'
 runs:
   using: composite
   steps:
@@ -47,3 +51,4 @@ runs:
         DOCKER_TAG: ${{ inputs.docker-tag }}
         REQUIRES_SECRETS: ${{ inputs.requires-secrets }}
         LAUNCH_TYPE: ${{ inputs.launch-type }}
+        ALLOW_ZERO_DESIRED: ${{ inputs.allow-zero-desired }}

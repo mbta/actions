@@ -20,6 +20,7 @@ function check_deployment_complete() {
   local deployment_details
   local id
   local rollout_status
+  local min_desired_count
   local desired_count
   local pending_count
   local running_count
@@ -32,8 +33,14 @@ function check_deployment_complete() {
   # get rollout state
   rollout_status="$(echo "${deployment_details}" | jq -r '.rolloutState // "COMPLETED"')"
 
+  # check if 0 desiredCount is allowed
+  min_desired_count=1
+  if [ "${ALLOW_ZERO_DESIRED}" = true ]; then
+    min_desired_count=0
+  fi
+
   # get current task counts
-  desired_count="$(echo "${deployment_details}" | jq -r '[.desiredCount, 1] | max')"
+  desired_count="$(echo "${deployment_details}" | jq -r '[.desiredCount, '"${min_desired_count}"' ] | max')"
   pending_count="$(echo "${deployment_details}" | jq -r '.pendingCount')"
   running_count="$(echo "${deployment_details}" | jq -r '.runningCount')"
   failed_count="$(echo "${deployment_details}" | jq -r '.failedTasks')"
