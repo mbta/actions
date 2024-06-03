@@ -141,19 +141,18 @@ while [ "${deployment_finished}" = "false" ]; do
     # extract deployment id
     new_deployment_id="$(echo "${new_deployment}" | jq -r '.id')"
     # find any tasks that may have stopped unexpectedly
-    # this should provide a list of arns (if any) that are quoted and space separated
-    # i.e. "arn:aws:ecs:us-west-2:123456789012:task/a1b2c3d4-5678-90ab-cdef-11111EXAMPLE" "arn:aws:ecs:us-west-2:123456789012:task/a1b2c3d4-5678-90ab-cdef-22222EXAMPLE"
-    stopped_tasks="$(aws ecs list-tasks --cluster "${ECS_CLUSTER}" --started-by "${new_deployment_id}" --desired-status "STOPPED" | jq -r '.taskArns[] | "\"\(. )\""' | tr '\n' ' ')"
+    # this should provide an array of arns (if any)
+    # i.e. ("arn:aws:ecs:us-west-2:123456789012:task/a1b2c3d4-5678-90ab-cdef-11111EXAMPLE" "arn:aws:ecs:us-west-2:123456789012:task/a1b2c3d4-5678-90ab-cdef-22222EXAMPLE")
+    mapfile -t stopped_tasks < <(aws ecs list-tasks --cluster "${ECS_CLUSTER}" --started-by "${new_deployment_id}" --desired-status "STOPPED" | jq -r '.taskArns[]')
 
-    # count number of quotes and divide by two
-    stopped_task_count=$(echo "$stopped_tasks" | grep -o '\"' | wc -l)
-    stopped_task_count=$((stopped_task_count / 2))
+    # count number of tasks in array
+    stopped_task_count=${#stopped_tasks[@]}
 
     if [ "${stopped_task_count}" -gt "0" ]; then
       echo "::endgroup::"
 
       # if there are stopped tasks, print the reason they stopped and then exit
-      stopped_reasons="$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks "${stopped_tasks}" | jq -r '.tasks[].stoppedReason')"
+      stopped_reasons="$(aws ecs describe-tasks --cluster "${ECS_CLUSTER}" --tasks "${stopped_tasks[@]}" | jq -r '.tasks[].stoppedReason')"
       echo "The deployment failed because one or more containers stopped running. The reasons given were:"
       echo "${stopped_reasons}"
       exit 1
