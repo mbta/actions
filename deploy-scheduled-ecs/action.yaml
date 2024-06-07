@@ -30,7 +30,6 @@ runs:
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
-        mask-aws-account-id: true
     - name: Deploy to ECS
       id: deploy-ecs
       run: ${{ github.action_path }}/deploy.sh

@@ -40,7 +40,6 @@ runs:
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
-        mask-aws-account-id: true
     - run: ${{ github.action_path }}/deploy.sh
       shell: bash
       env:

@@ -30,7 +30,6 @@ runs:
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
-        mask-aws-account-id: true
     - name: Package the Lambda function
       shell: bash
       run: |

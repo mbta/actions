@@ -35,7 +35,6 @@ runs:
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
-        mask-aws-account-id: true
     - run: echo "tag=${{ inputs.docker-repo }}:git-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       id: docker
       shell: bash
