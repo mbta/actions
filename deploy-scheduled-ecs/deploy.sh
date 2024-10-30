@@ -19,6 +19,7 @@ set -e -u
 
 # makes 'build_register_task_options' function available, produces 'reg_options' global var
 . ../shared/register_task_options.sh
+reg_options=() # returned as global by build_register_task_options
 
 # set default region so we don't have to specify --region everywhere
 export AWS_DEFAULT_REGION="${AWS_REGION}"

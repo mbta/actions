@@ -17,6 +17,7 @@ set -e -u
 
 # makes 'build_register_task_options' function available, produces 'reg_options' global var
 . ../shared/register_task_options.sh
+reg_options=() # returned as global by build_register_task_options
 
 function check_deployment_complete() {
   # extract task counts and test whether they match the desired state
