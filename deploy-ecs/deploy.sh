@@ -15,6 +15,10 @@ set -e -u
 # - ECS_TASK_DEF
 # - DOCKER_TAG
 
+# makes 'build_register_task_options' function available, produces 'reg_options' global var
+. ../shared/register_task_options.sh
+reg_options=() # returned as global by build_register_task_options
+
 function check_deployment_complete() {
   # extract task counts and test whether they match the desired state
   local deployment_details
@@ -90,17 +94,8 @@ fi
 
 echo "::group::Publishing new ${LAUNCH_TYPE} task definition."
 if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
-  aws ecs register-task-definition \
-    --family "${ECS_TASK_DEF}" \
-    --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
-    --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
-    --network-mode "$(echo "${taskdefinition}" | jq -r '.taskDefinition.networkMode')" \
-    --container-definitions "${newcontainers}" \
-    --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
-    --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" \
-    --requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities')" \
-    --cpu "$(echo "${taskdefinition}" | jq -r '.taskDefinition.cpu')" \
-    --memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')"
+  build_register_task_options "${taskdefinition}" "${newcontainers}"
+  aws ecs register-task-definition "${reg_options[@]}"
 elif [ "${LAUNCH_TYPE}" = "EC2" ] || [ "${LAUNCH_TYPE}" = "EXTERNAL" ]; then
   aws ecs register-task-definition \
     --family "${ECS_TASK_DEF}" \

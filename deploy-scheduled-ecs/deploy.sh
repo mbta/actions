@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e -u
 
 # uncomment to debug
@@ -16,6 +16,10 @@ set -e -u
 # - ECS_SERVICE: ecs service containing task being updated
 # - ECS_TASK_DEF: task definition to update revision for
 # - DOCKER_TAG: tag for docker image to use in new task definition
+
+# makes 'build_register_task_options' function available, produces 'reg_options' global var
+. ../shared/register_task_options.sh
+reg_options=() # returned as global by build_register_task_options
 
 # set default region so we don't have to specify --region everywhere
 export AWS_DEFAULT_REGION="${AWS_REGION}"
@@ -38,17 +42,8 @@ fi
 
 # this task uses fargate, so publish the new task definition
 echo "Publishing new Task Definition."
-aws ecs register-task-definition \
---family "${ECS_TASK_DEF}" \
---task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
---execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
---network-mode "$(echo "${taskdefinition}" | jq -r '.taskDefinition.networkMode')" \
---container-definitions "${newcontainers}" \
---volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
---placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" \
---requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities')" \
---cpu "$(echo "${taskdefinition}" | jq -r '.taskDefinition.cpu')" \
---memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')"
+build_register_task_options "${taskdefinition}" "${newcontainers}"
+aws ecs register-task-definition "${reg_options[@]}"
 
 # deploy the new task to our scheduled ecs task
 #
