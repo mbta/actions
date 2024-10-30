@@ -90,17 +90,23 @@ fi
 
 echo "::group::Publishing new ${LAUNCH_TYPE} task definition."
 if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
-  aws ecs register-task-definition \
-    --family "${ECS_TASK_DEF}" \
-    --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" \
-    --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
-    --network-mode "$(echo "${taskdefinition}" | jq -r '.taskDefinition.networkMode')" \
-    --container-definitions "${newcontainers}" \
-    --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
-    --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" \
-    --requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities')" \
-    --cpu "$(echo "${taskdefinition}" | jq -r '.taskDefinition.cpu')" \
-    --memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')"
+  # build register-task-definition command options in array
+  reg_options=( --family "${ECS_TASK_DEF}" )
+  reg_options+=( --task-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.taskRoleArn')" )
+  reg_options+=( --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" )
+  reg_options+=( --network-mode "$(echo "${taskdefinition}" | jq -r '.taskDefinition.networkMode')" )
+  reg_options+=( --container-definitions "${newcontainers}" )
+  reg_options+=( --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" )
+  reg_options+=( --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" )
+  reg_options+=( --requires-compatibilities "$(echo "${taskdefinition}" | jq -r '.taskDefinition.requiresCompatibilities')" )
+  reg_options+=( --cpu "$(echo "${taskdefinition}" | jq -r '.taskDefinition.cpu')" )
+  reg_options+=( --memory "$(echo "${taskdefinition}" | jq -r '.taskDefinition.memory')" )
+  # include --ephemeral-storage option if available in template task definition
+  template_ephemeral_storage="$(echo "${taskdefinition}" | jq -r '.taskDefinition.ephemeralStorage')"
+  if [ "$template_ephemeral_storage" != null ]; then
+      reg_options+=( --ephemeral-storage "${template_ephemeral_storage}")
+  fi
+  aws ecs register-task-definition "${reg_options[@]}"
 elif [ "${LAUNCH_TYPE}" = "EC2" ] || [ "${LAUNCH_TYPE}" = "EXTERNAL" ]; then
   aws ecs register-task-definition \
     --family "${ECS_TASK_DEF}" \
