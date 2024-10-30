@@ -16,7 +16,7 @@ set -e -u
 # - DOCKER_TAG
 
 # makes 'build_register_task_options' function available, produces 'reg_options' global var
-. $(dirname $0)/../shared/register_task_options.sh
+. "$(dirname $0)"/../shared/register_task_options.sh
 reg_options=() # returned as global by build_register_task_options
 
 function check_deployment_complete() {

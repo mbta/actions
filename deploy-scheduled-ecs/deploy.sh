@@ -18,7 +18,7 @@ set -e -u
 # - DOCKER_TAG: tag for docker image to use in new task definition
 
 # makes 'build_register_task_options' function available, produces 'reg_options' global var
-. $(dirname $0)/../shared/register_task_options.sh
+. "$(dirname $0)"/../shared/register_task_options.sh
 reg_options=() # returned as global by build_register_task_options
 
 # set default region so we don't have to specify --region everywhere
