@@ -10,32 +10,8 @@ import * as exec from "@actions/exec";
 import * as core from "@actions/core";
 import * as cache from "@actions/cache";
 import * as glob from "@actions/glob";
-import * as crypto from "crypto";
 import * as fs from "fs";
-import * as stream from "stream";
-import * as util from "util";
 import * as path from "path";
-
-async function hashFiles(globPaths: string[]): Promise<string> {
-  // borrowed from hashFiles implementation in GitHub Actions
-  const globber = await glob.create(globPaths.join("\n"));
-  const githubWorkspace = process.cwd();
-  const result = crypto.createHash("sha256");
-  for await (const file of globber.globGenerator()) {
-    if (!file.startsWith(`${githubWorkspace}${path.sep}`)) {
-      continue;
-    }
-    if (fs.statSync(file).isDirectory()) {
-      continue;
-    }
-    const hash = crypto.createHash("sha256");
-    const pipeline = util.promisify(stream.pipeline);
-    await pipeline(fs.createReadStream(file), hash);
-    result.write(hash.digest());
-  }
-  result.end();
-  return result.digest("hex");
-}
 
 const elixirScript = `
 map = %{
@@ -84,13 +60,11 @@ async function run(): Promise<void> {
   const workingDirectory = core.getInput("working-directory");
   process.chdir(workingDirectory);
 
-  const {
-    architecture,
-    elixir_version,
-    otp_release,
-    erts_version,
-  } = await elixirVersions();
-  const mixLockHash = await hashFiles(["mix.lock", "apps/*/mix.lock"]);
+  const { architecture, elixir_version, otp_release, erts_version } =
+    await elixirVersions();
+  const mixLockHash = await glob.hashFiles(
+    ["mix.lock", "apps/*/mix.lock"].join("\n"),
+  );
   const dialyzerPaths = [" _build/*/*.plt*"];
   const cacheKeyVersion = core.getInput("cache-key-version");
   const cacheKeyVersionPrefix =
