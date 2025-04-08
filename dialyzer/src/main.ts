@@ -84,12 +84,8 @@ async function run(): Promise<void> {
   const workingDirectory = core.getInput("working-directory");
   process.chdir(workingDirectory);
 
-  const {
-    architecture,
-    elixir_version,
-    otp_release,
-    erts_version,
-  } = await elixirVersions();
+  const { architecture, elixir_version, otp_release, erts_version } =
+    await elixirVersions();
   const mixLockHash = await hashFiles(["mix.lock", "apps/*/mix.lock"]);
   const dialyzerPaths = [" _build/*/*.plt*"];
   const cacheKeyVersion = core.getInput("cache-key-version");

@@ -3,14 +3,14 @@
     "build": "prettier --write src/ && ncc build src/main.ts -o dist/main"
   },
   "dependencies": {
-    "@actions/cache": "^1.0.7",
-    "@actions/core": "^1.2.7",
-    "@actions/exec": "^1.0.4",
-    "@actions/glob": "^0.1.1"
+    "@actions/cache": "^4.0.3",
+    "@actions/core": "^1.11.",
+    "@actions/exec": "^1.1.1",
+    "@actions/glob": "^0.5.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.28.4",
-    "prettier": "2.2.1",
-    "typescript": "^4.2.4"
+    "@vercel/ncc": "^0.38.3",
+    "prettier": "3.5.3",
+    "typescript": "^5.8.3"
   }
 }
