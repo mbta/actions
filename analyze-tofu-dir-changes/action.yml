@@ -1,0 +1,17 @@
+name: Analyze Tofu Directory Changes
+description: Analyzes which Terraform directories contain changes
+inputs:
+  changed-files:
+    description: Comma-separated list of changed Terraform files
+    required: true
+outputs:
+  tofu-directories:
+    description: Comma-separated list of directories containing changes
+    value: ${{ steps.analyze.outputs.tofu-directories }}
+runs:
+  using: composite
+  steps:
+    - name: Analyze directories
+      id: analyze
+      shell: bash
+      run: ${{ github.action_path }}/analyze_tofu_dir_changes.sh "${{ inputs.changed-files }}"
