@@ -1,0 +1,25 @@
+name: Check Tofu
+description: Validate and format check Terraform/OpenTofu configurations
+inputs:
+  directories:
+    description: Comma-separated list of directories to check (optional, checks all if not provided)
+    required: false
+    default: ''
+  check-syntax:
+    description: Enable syntax validation with tofu validate
+    required: false
+    default: 'true'
+runs:
+  using: composite
+  steps:
+    - name: Run Tofu checks
+      shell: bash
+      env:
+        CHECK_SYNTAX: ${{ inputs.check-syntax }}
+      run: |
+        if [ -n "${{ inputs.directories }}" ]; then
+          IFS=',' read -ra DIRS <<< "${{ inputs.directories }}"
+          ${{ github.action_path }}/check-tofu.sh "${DIRS[@]}"
+        else
+          ${{ github.action_path }}/check-tofu.sh
+        fi

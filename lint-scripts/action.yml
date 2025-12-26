@@ -1,0 +1,8 @@
+name: Lint Scripts
+description: Lint bash scripts using shellcheck
+runs:
+  using: composite
+  steps:
+    - name: Run shellcheck
+      shell: bash
+      run: ${{ github.action_path }}/lint-scripts.sh
