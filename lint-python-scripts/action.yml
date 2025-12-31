@@ -1,0 +1,8 @@
+name: Lint Python Scripts
+description: Lint python scripts using flake8
+runs:
+  using: composite
+  steps:
+    - name: Run flake8
+      shell: bash
+      run: ${{ github.action_path }}/lint-python-scripts.sh

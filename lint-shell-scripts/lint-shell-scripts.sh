@@ -1,16 +1,8 @@
 #!/usr/bin/env bash
 
-# lint all scripts in bin/
+# lint shell scripts in bin/ and .github/scripts/
 
 set -e
-
-# lint python scripts
-python_scripts="$(grep -rIl '^#!.*python' ./bin)" \
-    || echo "No python scripts found in ./bin."
-for script in ${python_scripts}; do
-    echo "Linting ${script}..."
-    flake8 "${script}"
-done
 
 # lint bash scripts
 bash_scripts="$(grep -rIl '^#!.*bash' ./bin)" \
