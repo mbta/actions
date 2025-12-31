@@ -5,21 +5,60 @@
 # checked. Otherwise all root and child modules are checked. In the latter
 # case it is assumed that this script is being run from the root of the repo.
 # Validation checks can be skipped by setting CHECK_SYNTAX=false.
+# This script handles environment setup (Scalr credentials, Cache dirs)
+# before running validation checks.
 
-# global var to enable/disable syntax checks with `tofu validate`
+# Global Defaults
 CHECK_SYNTAX="${CHECK_SYNTAX:-true}"
+TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-/tmp/.terraform-cache}"
+SCALR_HOSTNAME="${SCALR_HOSTNAME:-mbta.scalr.io}"
 
-# tofu must be installed
-echo -n "Checking for tofu binary... "
-if ! which tofu; then
-    >&2 echo "No tofu binary could be found"
-    exit 1
-fi
+function setup_environment() {
+    echo "Configuring Environment..."
+
+    # Setup Scalr Credentials
+    if [[ -n "$SCALR_TOKEN" ]]; then
+        echo "Configuring Scalr credentials for $SCALR_HOSTNAME..."
+        cat <<EOF > "$HOME/.terraformrc"
+credentials "$SCALR_HOSTNAME" {
+  token = "$SCALR_TOKEN"
+}
+EOF
+    else
+        echo "WARNING: SCALR_TOKEN not set. Remote module downloads may fail."
+    fi
+
+    # Setup Cache Directory
+    if [[ ! -d "$TF_PLUGIN_CACHE_DIR" ]]; then
+        echo "Creating Tofu plugin cache directory at $TF_PLUGIN_CACHE_DIR"
+        mkdir -p "$TF_PLUGIN_CACHE_DIR"
+    fi
+    export TF_PLUGIN_CACHE_DIR="$TF_PLUGIN_CACHE_DIR"
+}
+
+function check_binary() {
+    echo -n "Checking for tofu binary... "
+    if ! command -v tofu &> /dev/null; then
+        echo "No tofu binary found."
+        # Attempt to use ASDF if present (replaces explicit ASDF steps if run locally/CI)
+        if [ -f ".tool-versions" ] && command -v asdf &> /dev/null; then
+            echo "Attempting to install via asdf..."
+            asdf install tofu
+            asdf reshim
+        else
+            >&2 echo "Error: Tofu not found and cannot be installed automatically."
+            exit 1
+        fi
+    else
+        echo "Found $(tofu --version)"
+    fi
+}
 
 function check_syntax() {
-    # initialize the module, run `tofu validate`, and exit nonzero if errors are discovered
     echo "Checking syntax..."
-    tofu init -backend=false
+    # initialize the module, run `tofu validate`
+    # We use -backend=false to avoid remote state locking during checks
+    tofu init -backend=false > /dev/null
     if ! tofu validate; then
         >&2 echo "tofu configuration is not valid."
         exit 1
@@ -27,7 +66,6 @@ function check_syntax() {
 }
 
 function check_format() {
-    # run `tofu fmt` and exit nonzero if errors are discovered
     echo "Checking formatting..."
     if ! tofu fmt -check; then
         >&2 echo "Tofu format is unclean. Run 'tofu fmt' and push the changes."
@@ -37,13 +75,10 @@ function check_format() {
 }
 
 function get_terraform_root_modules() {
-    # generate a list of all root modules in this repo
-    # this function assumes the script is being run at the root of the repo
     if [ ! -d "terraform" ]; then
-        >&2 echo "Error: This script must be run from the root of the repo when run with no arguments."
+        >&2 echo "Error: This script must be run from the root of the repo."
         exit 1
     fi
-    # list all root modules (omitting 'modules' directory)
     for dir in terraform/*/; do
         if [ "$dir" != "terraform/modules/" ]; then
             echo "$dir"
@@ -52,44 +87,62 @@ function get_terraform_root_modules() {
 }
 
 function run_module_checks() {
-    # given a directory, descend into that directory and run format and (optionally) syntax checks
+    local dir="$1"
+    local start_time
     start_time=$(date +%s)
-    echo ""
-    echo "=========================================================="
-    echo "=== Checking ${1} ==="
-    echo "=========================================================="
-    pushd "${1}" >/dev/null || return
-    if [ "${CHECK_SYNTAX}" == true ]; then
-        echo "Running syntax check for ${1}"
-        check_syntax
-        echo "Finished syntax check for ${1}"
-    fi
-    echo "Running format check for ${1}"
-    check_format
-    echo "Finished format check for ${1}"
 
     echo ""
+    echo "=========================================================="
+    echo "=== Checking ${dir} ==="
+    echo "=========================================================="
+
+    pushd "${dir}" >/dev/null || return
+
+    if [ "${CHECK_SYNTAX}" == true ]; then
+        echo "Running syntax check for ${dir}"
+        check_syntax
+        echo "Finished syntax check for ${dir}"
+    fi
+
+    echo "Running format check for ${dir}"
+    check_format
+    echo "Finished format check for ${dir}"
+
+    local end_time
     end_time=$(date +%s)
-    total_time=$((end_time - start_time))
-    echo "Module check on ${1} took: $total_time seconds"
+    local total_time=$((end_time - start_time))
+    echo "Module check on ${dir} took: $total_time seconds"
 
     popd >/dev/null || return
 }
 
-# get paths from arguments if passed, otherwise check all root and child modules
+# --- Main Execution ---
+
+setup_environment
+check_binary
+
+# Check if arguments provided (directories), otherwise check all/changed
 if [ "$#" -gt 0 ]; then
     for tf_dir in "$@"; do
         run_module_checks "${tf_dir}"
     done
 else
     start_time=$(date +%s)
-    echo "Begin run_module_checks"
 
-    while IFS='' read -r tf_dir; do
-        run_module_checks "${tf_dir}";
-    done < <(get_terraform_root_modules)
+    # If CHANGED_DIRS env var is set (from CI), use it, otherwise scan all
+    if [[ -n "$CHANGED_DIRS" ]]; then
+        echo "Detected changed directories from environment: $CHANGED_DIRS"
+        for tf_dir in $CHANGED_DIRS; do
+            run_module_checks "${tf_dir}"
+        done
+    else
+        echo "No specific directories provided, scanning all root modules..."
+        while IFS='' read -r tf_dir; do
+            run_module_checks "${tf_dir}";
+        done < <(get_terraform_root_modules)
+    fi
 
     end_time=$(date +%s)
     total_time=$((end_time - start_time))
-    echo "Module validation took: $total_time seconds"
+    echo "Total validation time: $total_time seconds"
 fi
