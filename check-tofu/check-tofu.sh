@@ -2,7 +2,7 @@
 
 # Confirm that Tofu configuration is valid and properly formatted.
 # If arguments are passed, they are assumed to be paths to modules to be
-# checked. Otherwise all root and child modules are checked. In the latter
+# checked. Otherwise all root modules are checked. In the latter
 # case it is assumed that this script is being run from the root of the repo.
 # Validation checks can be skipped by setting CHECK_SYNTAX=false.
 # This script handles environment setup (Scalr credentials, Cache dirs)
@@ -29,10 +29,8 @@ EOF
     fi
 
     # Setup Cache Directory
-    if [[ ! -d "$TF_PLUGIN_CACHE_DIR" ]]; then
-        echo "Creating Tofu plugin cache directory at $TF_PLUGIN_CACHE_DIR"
-        mkdir -p "$TF_PLUGIN_CACHE_DIR"
-    fi
+    echo "Creating Tofu plugin cache directory at $TF_PLUGIN_CACHE_DIR"
+    mkdir -p "$TF_PLUGIN_CACHE_DIR"
     export TF_PLUGIN_CACHE_DIR="$TF_PLUGIN_CACHE_DIR"
 }
 
@@ -121,28 +119,20 @@ function run_module_checks() {
 setup_environment
 check_binary
 
-# Check if arguments provided (directories), otherwise check all/changed
+start_time=$(date +%s)
+
+# Check if arguments provided (directories), otherwise check all
 if [ "$#" -gt 0 ]; then
     for tf_dir in "$@"; do
         run_module_checks "${tf_dir}"
     done
 else
-    start_time=$(date +%s)
-
-    # If CHANGED_DIRS env var is set (from CI), use it, otherwise scan all
-    if [[ -n "$CHANGED_DIRS" ]]; then
-        echo "Detected changed directories from environment: $CHANGED_DIRS"
-        for tf_dir in $CHANGED_DIRS; do
-            run_module_checks "${tf_dir}"
-        done
-    else
-        echo "No specific directories provided, scanning all root modules..."
-        while IFS='' read -r tf_dir; do
-            run_module_checks "${tf_dir}";
-        done < <(get_terraform_root_modules)
-    fi
-
-    end_time=$(date +%s)
-    total_time=$((end_time - start_time))
-    echo "Total validation time: $total_time seconds"
+    echo "No specific directories provided, scanning all root modules..."
+    while IFS='' read -r tf_dir; do
+        run_module_checks "${tf_dir}";
+    done < <(get_terraform_root_modules)
 fi
+
+end_time=$(date +%s)
+total_time=$((end_time - start_time))
+echo "Total validation time: $total_time seconds"
