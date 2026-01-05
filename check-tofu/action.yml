@@ -9,17 +9,34 @@ inputs:
     description: Enable syntax validation with tofu validate
     required: false
     default: 'true'
+  scalr-token:
+    description: Token for authenticating with Scalr (required for remote modules)
+    required: false
+  scalr-hostname:
+    description: Scalr hostname
+    required: false
+    default: 'mbta.scalr.io'
+  tf-plugin-cache-dir:
+    description: Directory for Tofu plugin cache
+    required: false
+    default: '/tmp/.terraform-cache'
+
 runs:
   using: composite
   steps:
     - name: Run Tofu checks
       shell: bash
       env:
+        # Pass inputs to environment variables for the script
         CHECK_SYNTAX: ${{ inputs.check-syntax }}
+        SCALR_TOKEN: ${{ inputs.scalr-token }}
+        SCALR_HOSTNAME: ${{ inputs.scalr-hostname }}
+        TF_PLUGIN_CACHE_DIR: ${{ inputs.tf-plugin-cache-dir }}
       run: |
         if [ -n "${{ inputs.directories }}" ]; then
+          # Split comma-separated string into array
           IFS=',' read -ra DIRS <<< "${{ inputs.directories }}"
-          ${{ github.action_path }}/check-tofu.sh "${DIRS[@]}"
+          "${{ github.action_path }}/check-tofu.sh" "${DIRS[@]}"
         else
-          ${{ github.action_path }}/check-tofu.sh
+          "${{ github.action_path }}/check-tofu.sh"
         fi
