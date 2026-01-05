@@ -1,0 +1,24 @@
+{
+  "scripts": {
+    "dev": "ncc run index.ts",
+    "build": "ts-standard --fix && ncc build index.ts -o dist"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "conventional-commits-parser": "^5.0.0",
+    "semver": "^7.6.2"
+  },
+  "devDependencies": {
+    "@types/conventional-commits-parser": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@vercel/ncc": "^0.38.1",
+    "ts-standard": "^12.0.2",
+    "typescript": "^5.4.5"
+  },
+  "ts-standard": {
+    "ignore": [
+      "dist"
+    ]
+  }
+}
