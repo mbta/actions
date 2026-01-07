@@ -88,6 +88,7 @@ async function run(): Promise<void> {
 
   let cacheId = null;
 
+  await core.group("Populating PLT Cache", async () => {
   if (process.env["GITHUB_RUN_ATTEMPT"] == "1") {
     cacheId = await cache.restoreCache(dialyzerPaths, cacheKey, restoreKeys);
     if (cacheId) {
@@ -110,6 +111,8 @@ async function run(): Promise<void> {
       console.error("Unable to save cache:", e);
     }
   }
+
+  })
 
   let shouldUseGHAFormat = core.getBooleanInput("github-actions-formatting") === true;
   console.log("Using GHA format?", shouldUseGHAFormat)
