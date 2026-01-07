@@ -53,6 +53,7 @@ async function elixirVersions(): Promise<{
 }
 
 async function mixDialyzer(args: string[]): Promise<number> {
+  console.log("Executing command:", ["mix", "dialyzer", ...args])
   return exec.exec("mix", ["dialyzer", ...args]);
 }
 
