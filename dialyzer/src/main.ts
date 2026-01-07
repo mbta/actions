@@ -53,6 +53,7 @@ async function elixirVersions(): Promise<{
 }
 
 async function mixDialyzer(args: string[]): Promise<number> {
+  console.log("Executing command:", ["mix", "dialyzer", ...args])
   return exec.exec("mix", ["dialyzer", ...args]);
 }
 
@@ -87,6 +88,7 @@ async function run(): Promise<void> {
 
   let cacheId = null;
 
+  await core.group("Populating PLT Cache", async () => {
   if (process.env["GITHUB_RUN_ATTEMPT"] == "1") {
     cacheId = await cache.restoreCache(dialyzerPaths, cacheKey, restoreKeys);
     if (cacheId) {
@@ -109,7 +111,21 @@ async function run(): Promise<void> {
       console.error("Unable to save cache:", e);
     }
   }
-  await mixDialyzer(core.getInput("cmd-line").split(" "));
+
+  })
+
+  let shouldUseGHAFormat = core.getBooleanInput("github-actions-formatting") === true;
+  console.log("Using GHA format?", shouldUseGHAFormat)
+  let ghaFormatArgs = shouldUseGHAFormat
+    // When using the `github` format option, other format options can
+    // also be specified, to keep the original behavior and provide
+    // more details than what `github` format would provide alone.
+    ? ["--format", "github", "--format", "dialyxir"]
+    : [];
+
+  let userCmdArgs = core.getInput("cmd-line").split(" ");
+
+  await mixDialyzer([...ghaFormatArgs, ...userCmdArgs]);
 }
 
 run().catch((e) => {
