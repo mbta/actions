@@ -117,7 +117,7 @@ newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DE
 
 # redeploy the cluster
 echo "::group::Updating service ${ECS_SERVICE} to use task definition ${newrevision}..."
-aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}"
+aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}" --output off
 echo "::endgroup::"
 
 echo "::group::Wait for the new cluster to stabilize"
