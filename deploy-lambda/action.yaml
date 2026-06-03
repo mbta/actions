@@ -26,7 +26,7 @@ runs:
   using: 'composite'
   steps:
     - name: Setup AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # 6.2.0
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
@@ -34,13 +34,18 @@ runs:
     - name: Package the Lambda function
       shell: bash
       run: |
-        zip ${{ inputs.zip-flags }} function.zip ${{ inputs.path-to-zip }}
+        zip ${INPUTS_ZIP_FLAGS} function.zip ${INPUTS_PATH_TO_ZIP}
+      env:
+        INPUTS_ZIP_FLAGS: ${{ inputs.zip-flags }}
+        INPUTS_PATH_TO_ZIP: ${{ inputs.path-to-zip }}
     - name: Deploy to AWS Lambda
       shell: bash
       run: |
         aws lambda update-function-code \
-          --function-name ${{ inputs.lambda-function }} \
+          --function-name ${INPUTS_LAMBDA_FUNCTION} \
           --zip-file fileb://function.zip
+      env:
+        INPUTS_LAMBDA_FUNCTION: ${{ inputs.lambda-function }}
     - uses: mbta/actions/notify-slack-deploy@v1
       if: ${{ !cancelled() }}
       with:

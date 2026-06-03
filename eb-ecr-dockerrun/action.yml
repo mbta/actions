@@ -23,23 +23,28 @@ runs:
         echo "dir=$(mktemp -d $RUNNER_TEMP/deploy-XXXXXX)" >> $GITHUB_OUTPUT
     - shell: bash
       run: |
-        test -d rel/.ebextensions && cp -r rel/.ebextensions ${{ steps.build.outputs.dir }}
-        pushd ${{ steps.build.outputs.dir }} > /dev/null
+        test -d rel/.ebextensions && cp -r rel/.ebextensions ${STEPS_BUILD_OUTPUTS_DIR}
+        pushd ${STEPS_BUILD_OUTPUTS_DIR} > /dev/null
         cat <<EOF > Dockerrun.aws.json
         {
           "AWSEBDockerrunVersion": "1",
           "Image": {
-            "Name": "${{ inputs.docker-tag }}",
+            "Name": "${INPUTS_DOCKER_TAG}",
             "Update": "true"
           },
           "Ports": [
             {
-              "ContainerPort": "${{ inputs.port }}"
+              "ContainerPort": "${INPUTS_PORT}"
             }
           ]
         }
         EOF
-        zip -r ${{ steps.build.outputs.package }} .
+        zip -r ${STEPS_BUILD_OUTPUTS_PACKAGE} .
         popd > /dev/null
-        rm -rf ${{ steps.build.outputs.dir }}
-        echo Created build package: ${{ steps.build.outputs.package }}
+        rm -rf ${STEPS_BUILD_OUTPUTS_DIR}
+        echo Created build package: ${STEPS_BUILD_OUTPUTS_PACKAGE}
+      env:
+        STEPS_BUILD_OUTPUTS_DIR: ${{ steps.build.outputs.dir }}
+        INPUTS_DOCKER_TAG: ${{ inputs.docker-tag }}
+        INPUTS_PORT: ${{ inputs.port }}
+        STEPS_BUILD_OUTPUTS_PACKAGE: ${{ steps.build.outputs.package }}

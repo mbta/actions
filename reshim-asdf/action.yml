@@ -1,10 +1,11 @@
+# Deprecated. asdf has an offical `asdf-vm/actions/setup` action which you should use instead
 name: Reshim ASDF (without installing)
 description: Used when ASDF was installed via a cache restore
 runs:
   using: composite
   steps:
     - shell: bash
-      run: |
+      run: | # zizmor: ignore[github-env] This action is deprecated, not worth rewriting.
         ASDF_DIR=$HOME/.asdf
         echo "ASDF_DIR=$ASDF_DIR" >> $GITHUB_ENV
         echo "ASDF_DATA_DIR=$ASDF_DIR" >> $GITHUB_ENV
