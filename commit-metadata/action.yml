@@ -21,6 +21,9 @@ runs:
       run: |
         cat <<EOF
         Set outputs:
-        - sha-short => ${{ steps.git.outputs.sha-short }}
-        - commit-message => ${{ steps.git.outputs.commit-message }}
+        - sha-short => ${STEPS_GIT_OUTPUTS_SHA_SHORT}
+        - commit-message => ${STEPS_GIT_OUTPUTS_COMMIT_MESSAGE}
         EOF
+      env:
+        STEPS_GIT_OUTPUTS_SHA_SHORT: ${{ steps.git.outputs.sha-short }}
+        STEPS_GIT_OUTPUTS_COMMIT_MESSAGE: ${{ steps.git.outputs.commit-message }}

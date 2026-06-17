@@ -11,3 +11,5 @@ updates:
       - "mbta/tid-tech-leads"
     commit-message:
       prefix: "[github-actions]"
+    cooldown:
+      default-days: 7

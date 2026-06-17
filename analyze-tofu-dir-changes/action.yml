@@ -14,4 +14,6 @@ runs:
     - name: Analyze directories
       id: analyze
       shell: bash
-      run: ${{ github.action_path }}/analyze_tofu_dir_changes.sh "${{ inputs.changed-files }}"
+      run: ${{ github.action_path }}/analyze_tofu_dir_changes.sh "${INPUTS_CHANGED_FILES}"
+      env:
+        INPUTS_CHANGED_FILES: ${{ inputs.changed-files }}

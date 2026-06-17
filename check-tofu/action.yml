@@ -32,10 +32,11 @@ runs:
         SCALR_TOKEN: ${{ inputs.scalr-token }}
         SCALR_HOSTNAME: ${{ inputs.scalr-hostname }}
         TF_PLUGIN_CACHE_DIR: ${{ inputs.tf-plugin-cache-dir }}
+        INPUTS_DIRECTORIES: ${{ inputs.directories }}
       run: |
-        if [ -n "${{ inputs.directories }}" ]; then
+        if [ -n "${INPUTS_DIRECTORIES}" ]; then
           # Split comma-separated string into array
-          IFS=',' read -ra DIRS <<< "${{ inputs.directories }}"
+          IFS=',' read -ra DIRS <<< "${INPUTS_DIRECTORIES}"
           "${{ github.action_path }}/check-tofu.sh" "${DIRS[@]}"
         else
           "${{ github.action_path }}/check-tofu.sh"
