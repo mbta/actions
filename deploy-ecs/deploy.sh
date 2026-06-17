@@ -95,7 +95,7 @@ fi
 echo "::group::Publishing new ${LAUNCH_TYPE} task definition."
 if [ "${LAUNCH_TYPE}" = "FARGATE" ]; then
   build_register_task_options "${taskdefinition}" "${newcontainers}"
-  aws ecs register-task-definition "${reg_options[@]}"
+  aws ecs register-task-definition "${reg_options[@]}" --output off
 elif [ "${LAUNCH_TYPE}" = "EC2" ] || [ "${LAUNCH_TYPE}" = "EXTERNAL" ]; then
   aws ecs register-task-definition \
     --family "${ECS_TASK_DEF}" \
@@ -103,7 +103,8 @@ elif [ "${LAUNCH_TYPE}" = "EC2" ] || [ "${LAUNCH_TYPE}" = "EXTERNAL" ]; then
     --execution-role-arn "$(echo "${taskdefinition}" | jq -r '.taskDefinition.executionRoleArn')" \
     --container-definitions "${newcontainers}" \
     --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
-    --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')"
+    --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" \
+    --output off
 else
   echo "::endgroup::"
   echo "Error: expected 'FARGATE', 'EC2', or 'EXTERNAL' launch-type, got ${LAUNCH_TYPE}"
@@ -116,7 +117,7 @@ newrevision="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DE
 
 # redeploy the cluster
 echo "::group::Updating service ${ECS_SERVICE} to use task definition ${newrevision}..."
-aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}"
+aws ecs update-service --cluster="${ECS_CLUSTER}" --service="${ECS_SERVICE}" --task-definition "${ECS_TASK_DEF}:${newrevision}" --output off
 echo "::endgroup::"
 
 echo "::group::Wait for the new cluster to stabilize"
