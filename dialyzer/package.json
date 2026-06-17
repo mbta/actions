@@ -1,18 +1,18 @@
 {
   "scripts": {
-    "build": "prettier --write . && ncc build src/main.ts -o dist/main"
+    "build": "prettier --write . && esbuild src/main.ts --bundle --outfile=dist/main/index.js --platform=node --target=node24 --inject:./import-meta-url.js --define:import.meta.url=import_meta_url"
   },
   "dependencies": {
-    "@actions/cache": "^4.0.3",
-    "@actions/core": "^1.11.1",
-    "@actions/exec": "^1.1.1",
-    "@actions/glob": "^0.5.0"
+    "@actions/cache": "^6.0.1",
+    "@actions/core": "^3.0.1",
+    "@actions/exec": "^3.0.0",
+    "@actions/glob": "^0.7.0"
   },
   "devDependencies": {
-    "@tsconfig/node20": "^20.1.5",
-    "@types/node": "^20.17.30",
-    "@vercel/ncc": "^0.38.3",
-    "prettier": "3.5.3",
-    "typescript": "^5.8.3"
+    "@tsconfig/node24": "^24.0.4",
+    "@types/node": "^24.13.2",
+    "esbuild": "^0.28.1",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3"
   }
 }
