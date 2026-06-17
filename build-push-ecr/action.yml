@@ -34,33 +34,48 @@ runs:
   using: composite
   steps:
     - name: Setup AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
       with:
         role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
         mask-aws-account-id: true
     - run: |
         short_sha=$(git rev-parse --short HEAD)
-        echo "tag=${{ inputs.docker-repo }}:git-${short_sha}" >> $GITHUB_OUTPUT
+        echo "tag=${INPUTS_DOCKER_REPO}:git-${short_sha}" >> $GITHUB_OUTPUT
         echo "tag-suffix=git-${short_sha}" >> $GITHUB_OUTPUT
       id: docker
       shell: bash
+      env:
+        INPUTS_DOCKER_REPO: ${{ inputs.docker-repo }}
     - run: >
         docker build
-        ${{ inputs.docker-additional-args }}
-        --pull -t ${{ steps.docker.outputs.tag }} ${{ inputs.dockerfile-path }}
+        ${INPUTS_DOCKER_ADDITIONAL_ARGS}
+        --pull -t ${STEPS_DOCKER_OUTPUTS_TAG} ${INPUTS_DOCKERFILE_PATH}
       shell: bash
+      env:
+        INPUTS_DOCKER_ADDITIONAL_ARGS: ${{ inputs.docker-additional-args }}
+        STEPS_DOCKER_OUTPUTS_TAG: ${{ steps.docker.outputs.tag }}
+        INPUTS_DOCKERFILE_PATH: ${{ inputs.dockerfile-path }}
     - run: >
-        aws ecr get-login-password --region ${{ inputs.aws-region }}
-        | docker login --username AWS --password-stdin ${{ inputs.docker-repo }}
+        aws ecr get-login-password --region ${INPUTS_AWS_REGION}
+        | docker login --username AWS --password-stdin ${INPUTS_DOCKER_REPO}
       shell: bash
-    - run: docker push ${{ steps.docker.outputs.tag }}
+      env:
+        INPUTS_AWS_REGION: ${{ inputs.aws-region }}
+        INPUTS_DOCKER_REPO: ${{ inputs.docker-repo }}
+    - run: docker push ${STEPS_DOCKER_OUTPUTS_TAG}
       shell: bash
+      env:
+        STEPS_DOCKER_OUTPUTS_TAG: ${{ steps.docker.outputs.tag }}
     - run: >
-        docker_additional_tags=(${{ inputs.docker-additional-tags }});
+        docker_additional_tags=(${INPUTS_DOCKER_ADDITIONAL_TAGS});
         for tag in ${docker_additional_tags[@]}; do
-          docker tag ${{ steps.docker.outputs.tag }} ${{ inputs.docker-repo }}:$tag
-          docker push ${{ inputs.docker-repo }}:$tag
+          docker tag ${STEPS_DOCKER_OUTPUTS_TAG} ${INPUTS_DOCKER_REPO}:$tag
+          docker push ${INPUTS_DOCKER_REPO}:$tag
         done
       shell: bash
       if: ${{ inputs.docker-additional-tags != '' }}
+      env:
+        INPUTS_DOCKER_ADDITIONAL_TAGS: ${{ inputs.docker-additional-tags }}
+        STEPS_DOCKER_OUTPUTS_TAG: ${{ steps.docker.outputs.tag }}
+        INPUTS_DOCKER_REPO: ${{ inputs.docker-repo }}
