@@ -71,14 +71,21 @@ export AWS_DEFAULT_REGION="${AWS_REGION}"
 
 # attempt to get the contents of the template task definition from ECS (for Terraform-built ECS services)
 echo "Retrieving ${ECS_TASK_DEF}-template task definition..."
-taskdefinition="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}-template")" \
+taskdefinition="$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}-template" --include TAGS)" \
   || echo "No template task definition was found."
 
 # if no template exists, attempt to get task definition currently running on AWS (for legacy ECS services)
 if [ -z "${taskdefinition}" ]; then
   echo "Retrieving current ${ECS_TASK_DEF} task definition..."
-  taskdefinition=$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}")
+  taskdefinition=$(aws ecs describe-task-definition --task-definition "${ECS_TASK_DEF}" --include TAGS)
 fi
+
+# extracts environment name from the task definition, defaulting to "aws-tid-default-environment", and adds it under the GithubActionsEnvironment Tag
+# deletes the TerraformEnvironment Tag after adding the GithubActionsEnvironment Tag
+default_environment="aws-tid-default-environment"
+environment=$(echo ${taskdefinition} | jq --arg default $default_environment -r '.tags[] | select(.key=="TerraformEnvironment") .value // $default')
+taskdefinition=$(echo ${taskdefinition} | jq --arg env ${environment} '.tags += [{"key": "GithubActionsEnvironment", "value": $env}]')
+taskdefinition=$(echo ${taskdefinition} | jq 'del(.tags[] | select (.key == "TerraformEnvironment"))')
 
 # use retrieved task definition as basis for new revision, but replace image
 echo "Updating container image to ${DOCKER_TAG}."
