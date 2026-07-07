@@ -23,6 +23,7 @@ function build_register_task_options() {
   reg_options+=( --requires-compatibilities "$(echo "${task_def}" | jq -r '.taskDefinition.requiresCompatibilities')" )
   reg_options+=( --cpu "$(echo "${task_def}" | jq -r '.taskDefinition.cpu')" )
   reg_options+=( --memory "$(echo "${task_def}" | jq -r '.taskDefinition.memory')" )
+  reg_options+=( --tags "$(echo "${task_def}" | jq -r '.tags')" )
   # include --ephemeral-storage option if available in template task definition
   template_ephemeral_storage="$(echo "${task_def}" | jq -r '.taskDefinition.ephemeralStorage')"
   if [ "$template_ephemeral_storage" != null ]; then
