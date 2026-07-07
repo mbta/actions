@@ -111,6 +111,7 @@ elif [ "${LAUNCH_TYPE}" = "EC2" ] || [ "${LAUNCH_TYPE}" = "EXTERNAL" ]; then
     --container-definitions "${newcontainers}" \
     --volumes "$(echo "${taskdefinition}" | jq '.taskDefinition.volumes')" \
     --placement-constraints "$(echo "${taskdefinition}" | jq '.taskDefinition.placementConstraints')" \
+    --tags "$(echo "${taskdefinition}" | jq -r '.tags')" \
     --output off
 else
   echo "::endgroup::"
