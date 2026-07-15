@@ -31,9 +31,10 @@ taskdefinition="$(aws ecs describe-task-definition --task-definition "${ECS_TASK
 # extracts environment name from the task definition, defaulting to "aws-tid-default-environment", and adds it under the GithubActionsEnvironment Tag
 # deletes the TerraformEnvironment Tag after adding the GithubActionsEnvironment Tag
 default_environment="aws-tid-default-environment"
-environment=$(echo ${taskdefinition} | jq --arg default $default_environment -r '.tags[] | select(.key=="TerraformEnvironment") .value // $default')
-taskdefinition=$(echo ${taskdefinition} | jq --arg env ${environment} '.tags += [{"key": "GithubActionsEnvironment", "value": $env}]')
-taskdefinition=$(echo ${taskdefinition} | jq 'del(.tags[] | select (.key == "TerraformEnvironment"))')
+environment=$(echo "${taskdefinition}" | jq -r '.tags[] | select(.key=="TerraformEnvironment") | .value')
+if [ -z "${environment}" ]; then environment="${default_environment}"; fi
+taskdefinition=$(echo "${taskdefinition}" | jq --arg env "${environment}" '.tags += [{"key": "GithubActionsEnvironment", "value": $env}]')
+taskdefinition=$(echo "${taskdefinition}" | jq 'del(.tags[] | select (.key == "TerraformEnvironment"))')
 
 # use retrieved task definition as basis for new revision, but replace image
 echo "Updating container image to ${DOCKER_TAG}."
