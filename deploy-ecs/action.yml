@@ -32,6 +32,10 @@ inputs:
     description: Whether the deploy allows the ECS desiredCount to be 0 (expects "true" or "false")
     required: false
     default: 'false'
+  expose-image-tag-as:
+    description: If set, the deployed Docker image's `git-[sha]` tag to identify the release
+    required: false
+    default: ''
 runs:
   using: composite
   steps:
@@ -52,3 +56,4 @@ runs:
         REQUIRES_SECRETS: ${{ inputs.requires-secrets }}
         LAUNCH_TYPE: ${{ inputs.launch-type }}
         ALLOW_ZERO_DESIRED: ${{ inputs.allow-zero-desired }}
+        EXPOSE_IMAGE_TAG_AS: ${{ inputs.expose-image-tag-as }}

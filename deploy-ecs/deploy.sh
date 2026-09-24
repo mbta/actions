@@ -94,6 +94,15 @@ newcontainers="$(echo "${taskdefinition}" | \
   jq '.taskDefinition.containerDefinitions' | \
   jq --arg tag "${DOCKER_TAG}" 'map(.image="\($tag)")')"
 
+# optionally expose the deployed image's tag to the container as an env var, so the app can
+# distinguish itself (e.g. for node naming) from instances of a different deploy
+if [ -n "${EXPOSE_IMAGE_TAG_AS:-}" ]; then
+  image_tag_value="${DOCKER_TAG##*:}"
+  newcontainers="$(echo "${newcontainers}" | \
+    jq --arg name "${EXPOSE_IMAGE_TAG_AS}" --arg value "${image_tag_value}" \
+      'map(.environment = ((.environment // []) | map(select(.name != $name)) + [{"name": $name, "value": $value}]))')"
+fi
+
 # check to make sure the secrets are included in the new container definition
 if [ "${REQUIRES_SECRETS}" = true ] && (echo "${newcontainers}" | jq '.[0] | .secrets' | grep '^null$'); then
   echo "Error: The container definition is missing its 'secrets' block. Deploy cannot proceed."
