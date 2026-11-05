@@ -1,0 +1,81 @@
+name: Publish to Hex.pm
+description: Validate a release tag and publish an Elixir package and its documentation to Hex.pm
+inputs:
+  hex-api-key:
+    description: Hex.pm API key; required unless validate-only is true
+    required: false
+  validate-only:
+    description: Only validate the release, using the caller's installed and compiled Mix project
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Check release context
+      shell: bash
+      env:
+        VALIDATE_ONLY: ${{ inputs.validate-only }}
+      run: |
+        if [[ "$VALIDATE_ONLY" != true && "$VALIDATE_ONLY" != false ]]; then
+          echo "::error::validate-only must be true or false"
+          exit 1
+        fi
+        if [[ "$GITHUB_EVENT_NAME" != push || "$GITHUB_REF_TYPE" != tag ]]; then
+          echo "::error::Releases must run on a pushed tag"
+          exit 1
+        fi
+        if [[ "$(git rev-parse --is-shallow-repository)" != false ]]; then
+          echo "::error::Checkout must use fetch-depth: 0"
+          exit 1
+        fi
+        if [[ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]]; then
+          echo "::error::Checkout must match the pushed release commit"
+          exit 1
+        fi
+        if ! git merge-base --is-ancestor HEAD origin/main; then
+          echo "::error::Release commit must be on main"
+          exit 1
+        fi
+    - name: ASDF cache
+      if: inputs.validate-only != 'true'
+      id: asdf-cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+      with:
+        path: ~/.asdf
+        key: ${{ runner.os }}-asdf-v5-${{ hashFiles('.tool-versions') }}
+    - name: Install runtime
+      if: inputs.validate-only != 'true' && steps.asdf-cache.outputs.cache-hit != 'true'
+      uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47  # v4.0.1
+    - name: Restore ASDF environment
+      if: inputs.validate-only != 'true' && steps.asdf-cache.outputs.cache-hit == 'true'
+      uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47  # v4.0.1
+      with:
+        skip_install: true
+    - name: Reshim runtime
+      if: inputs.validate-only != 'true'
+      shell: bash
+      run: asdf reshim
+    - name: Install dependencies and compile
+      if: inputs.validate-only != 'true'
+      shell: bash
+      run: |
+        mix local.rebar --force
+        mix local.hex --force
+        mix deps.get
+        mix compile
+    - name: Validate release version
+      shell: bash
+      env:
+        RELEASE_TAG: ${{ github.ref_name }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: mix run --no-start --no-compile "$ACTION_PATH/validate-release.exs"
+    - name: Publish package and documentation
+      if: inputs.validate-only != 'true'
+      shell: bash
+      env:
+        HEX_API_KEY: ${{ inputs.hex-api-key }}
+      run: |
+        if [[ -z "$HEX_API_KEY" ]]; then
+          echo "::error::hex-api-key is required to publish"
+          exit 1
+        fi
+        mix hex.publish --yes
